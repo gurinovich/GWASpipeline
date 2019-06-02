@@ -1,4 +1,7 @@
-#nextflow
+# Nextflow
+work/
+results/
+.nextflow*
 
 # General
 .DS_Store
