@@ -1,3 +1,6 @@
+### Warning
+*The pipeline will not work on other machines unless the file paths on the config file and other toy data files are updated. In the future, we can add a script that automatically updates the file paths.*
+
 ### Clone Repository
 ```bash
 
