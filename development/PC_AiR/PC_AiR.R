@@ -24,23 +24,9 @@ colnames(pheno.dat)[colnames(pheno.dat)=="PC2"] <- "PC2.pheno"
 colnames(pheno.dat)[colnames(pheno.dat)=="PC3"] <- "PC3.pheno"
 colnames(pheno.dat)[colnames(pheno.dat)=="PC4"] <- "PC4.pheno"
 
-#pheno.dat[pheno.dat$sample.id%in%pheno.dat$sample.id[duplicated(pheno.dat$sample.id)],]
-
-getid <- function(x){
-	pos <- gregexpr("@",x)[[1]][1]
-	id <- substr(x,1,pos-1)
-	id
-}
-
 gds.sample.id <- data.frame(sample.id= seqGetData(gds, "sample.id"),stringsAsFactors=F)
 
-gds.sample.id.match <- apply(gds.sample.id,1,getid)
-
-gds.sample.id$sample.id.match <- gds.sample.id.match
-
-annot <- left_join(gds.sample.id, pheno.dat, by=c("sample.id.match"="sample.id"))
-
-print(paste0("ID not mapped :", paste0(pheno.dat$sample.id[!pheno.dat$sample.id%in%annot$sample.id.match], collapse=",")))
+annot <- left_join(gds.sample.id, pheno.dat)
 
 annot <- annot[,c("sample.id",colnames(annot)[colnames(annot)%in%c(phenotypes,covariates)], "PC1.pheno","PC2.pheno","PC3.pheno","PC4.pheno")]
 
