@@ -17,7 +17,7 @@ library(SeqVarTools)
 library(dplyr)
 
 pheno.dat <- read.csv(pheno.file,stringsAsFactors=F,header=T,na.strings=c(NA,""))
-pheno.dat <- unique(pheno.dat)
+
 pheno.dat$sample.id <- as.character(pheno.dat$ID)
 colnames(pheno.dat)[colnames(pheno.dat)=="PC1"] <- "PC1.pheno"
 colnames(pheno.dat)[colnames(pheno.dat)=="PC2"] <- "PC2.pheno"
