@@ -39,14 +39,14 @@ all.equal(annot$sample.id,seqGetData(gds, "sample.id"))
 seqData <- SeqVarData(gds, sampleData=annot)
 
 ####LD pruning to get variant set
-if(is.null(snpset)){
+if(is.null(snpset.file)){
 library(SNPRelate)
 snpset <- snpgdsLDpruning(gds, method="corr", slide.max.bp=10e7, 
                           ld.threshold=sqrt(0.1))
 pruned <- unlist(snpset, use.names=FALSE)
 saveRDS(pruned, "pruned.rds")
 }else{
-  pruned <- unlist(read.table(snpset.file))
+  pruned <- unlist(readRDS(snpset.file))
 }
 
 ####KING
