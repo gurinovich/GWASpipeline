@@ -1,13 +1,3 @@
-### Warning
-*The pipeline will not work on other machines unless the file paths on the config file and other toy data files are updated. In the future, we can add a script that automatically updates the file paths.*
-
-### Clone Repository
-```bash
-
-$ git clone https://github.com/gurinovich/GWASpipeline
-
-```
-
 ### Conda Envrionment
 ```bash
 
@@ -24,10 +14,23 @@ conda install -c bioconda/label/gcc7 bioconductor-seqarray
 
 ```
 
+### Clone Repository
+```bash
+
+$ git clone https://github.com/gurinovich/GWASpipeline
+
+```
+### Initalize Paths to Test Data
+```bash
+
+$ cd GWASpipeline/pipeline 
+$ python utils/paths.py  
+
+```
+
 ### Download Nextflow Executable
 ```
 
-$ cd GWASpipeline/pipeline
 $ curl -s https://get.nextflow.io | bash
 
 ```
