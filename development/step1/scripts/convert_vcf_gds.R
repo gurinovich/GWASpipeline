@@ -1,5 +1,6 @@
 library(SeqArray)
 
+args = commandArgs(trailingOnly=TRUE)
 vcf.file <- args[1]
 gds.file <- args[2]
 

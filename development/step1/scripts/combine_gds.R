@@ -1,6 +1,6 @@
 library(SeqArray)
 
-vcf.file <- args[1]
-gds.file <- args[2]
+args = commandArgs(trailingOnly=TRUE)
+gds.file <- args[1]
   
-seqMerge(paste0("vcf.file",c(1:22),".gds"), paste0(gds.file,".gds"))
+seqMerge(paste0(gds.file,c(1:22),".gds"), paste0(gds.file,".gds"))

@@ -4,6 +4,7 @@ library(Biobase)
 library(SeqVarTools)
 library(dplyr)
 
+args = commandArgs(trailingOnly=TRUE)
 gds.file <- args[1]
 pheno.file <- args[2]
 
