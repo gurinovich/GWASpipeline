@@ -1,2 +1,3 @@
 vcf_file="../data/vcf_file"
 gds_file="../data/gds_file"
+pheno_file="../data/pheno_file.csv"
