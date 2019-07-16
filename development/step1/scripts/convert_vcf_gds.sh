@@ -10,12 +10,13 @@ for chr in {1..22}
 do
 	Rscript ./scripts/convert_vcf_gds.R ${vcf_file}${chr}".vcf.gz" ${gds_file}${chr}".gds"
 done
-#wait
+
+wait
 
 #combine gds files per chromosome into one file
 Rscript ./scripts/combine_gds.R $gds_file
 
-#PCA_AiR step
-#echo $gds_file
-#echo $pheno_file
-#Rscript ./scripts/PCA_AiR.R $gds_file $pheno_file
+wait
+
+#PC_AiR step
+Rscript ./scripts/PC_AiR.R $gds_file $pheno_file $phenotypes $num_covariates ${covariates[@]} $snpset_file

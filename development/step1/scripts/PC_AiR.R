@@ -3,16 +3,36 @@ library(GENESIS)
 library(Biobase)
 library(SeqVarTools)
 library(dplyr)
+library(SNPRelate)
+library(ggplot2)
 
 args = commandArgs(trailingOnly=TRUE)
+#gds.file <- "./data/gds_file"
 gds.file <- args[1]
+#pheno.file <- "./data/pheno_file.csv"
 pheno.file <- args[2]
+#phenotypes <- "outcome"
+phenotypes <- args[3]
+#num_covariates <- 6
+num_covariates <- args[4]
+# covariates <- c("age", "sex", "PC1", "PC2", "PC3", "PC4")
+covariates <- vector(mode = "character", length = num_covariates)
+for (i in 1:num_covariates) {
+  covariates[i] <- args[4+i]
+}
+#snpset.file <- NA
+snpset.file <- args[5+i]
 
-#opt.file <- commandArgs()[n.args-1]
-#source(opt.file)
+# print(gds.file)
+# print(pheno.file)
+# print(phenotypes)
+# print(num_covariates)
+# print(covariates)
+# print(snpset.file)
+
 
 ####Open GDS
-gds <- seqOpen(gds.file)
+gds <- seqOpen(paste0(gds.file,".gds"))
 
 ####Create a SeqVarData object
 pheno.dat <- read.csv(pheno.file,stringsAsFactors=F,header=T,na.strings=c(NA,""))
@@ -37,44 +57,38 @@ all.equal(annot$sample.id,seqGetData(gds, "sample.id"))
 seqData <- SeqVarData(gds, sampleData=annot)
 
 ####LD pruning to get variant set
-if(is.null(snpset.file)){
-library(SNPRelate)
-snpset <- snpgdsLDpruning(gds, method="corr", slide.max.bp=10e7, 
-                          ld.threshold=sqrt(0.1))
-pruned <- unlist(snpset, use.names=FALSE)
-saveRDS(pruned, "pruned.rds")
+if(is.na(snpset.file)){
+  snpset <- snpgdsLDpruning(gds, method="corr", slide.max.bp=10e7, ld.threshold=sqrt(0.1))
+  pruned <- unlist(snpset, use.names=FALSE)
+#saveRDS(pruned, "pruned.rds")
 }else{
-  pruned <- unlist(readRDS(snpset.file))
+#  pruned <- unlist(readRDS(snpset.file))
 }
 
 ####KING
 king <- snpgdsIBDKING(gds, sample.id=analysis.sample.id, snp.id=pruned, verbose=FALSE)
 kingMat <- king$kinship
 dimnames(kingMat) <- list(king$sample.id, king$sample.id)
-saveRDS(king,"king.rds")
+#saveRDS(king,"king.rds")
 
 ####PC-AiR
 pcs <- pcair(seqData, kinobj=kingMat, kin.thresh=2^(-11/2),
                       divobj=kingMat, div.thresh=-2^(-11/2),
              sample.include=analysis.sample.id,
              snp.include=pruned)
-saveRDS(pcs,"pcs.rds")
+#saveRDS(pcs,"pcs.rds")
 
-library(ggplot2)
 pc.df <- as.data.frame(pcs$vectors)
 names(pc.df) <- paste0("PC", 1:ncol(pcs$vectors))
 pc.df$sample.id <- row.names(pcs$vectors)
 pc.df <- left_join(pData(annot), pc.df, by="sample.id")
-saveRDS(pc.df,"pc.df.rds")
+#saveRDS(pc.df,"pc.df.rds")
 
-png("PC1vsPC2.png")
-ggplot(pc.df, aes(PC1, PC2)) + 
-geom_point()
+png("./figures/PC1vsPC2.png")
+ggplot(pc.df, aes(PC1, PC2)) + geom_point()
 dev.off()
 
-png("PC3vsPC4.png")
-ggplot(pc.df, aes(PC3, PC4)) +
-geom_point()
+png("./figures/PC3vsPC4.png")
+ggplot(pc.df, aes(PC3, PC4)) + geom_point()
 dev.off()
 
-#date()
