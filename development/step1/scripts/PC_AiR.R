@@ -15,7 +15,7 @@ pheno.file <- args[2]
 phenotypes <- args[3]
 #num_covariates <- 6
 num_covariates <- args[4]
-# covariates <- c("age", "sex", "PC1", "PC2", "PC3", "PC4")
+#covariates <- c("age", "sex", "PC1", "PC2", "PC3", "PC4")
 covariates <- vector(mode = "character", length = num_covariates)
 for (i in 1:num_covariates) {
   covariates[i] <- args[4+i]

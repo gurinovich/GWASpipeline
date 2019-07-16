@@ -16,7 +16,7 @@ wait
 #combine gds files per chromosome into one file
 Rscript ./scripts/combine_gds.R $gds_file
 
-wait
+#wait
 
 #PC_AiR step
 Rscript ./scripts/PC_AiR.R $gds_file $pheno_file $phenotypes $num_covariates ${covariates[@]} $snpset_file
