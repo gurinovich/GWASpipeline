@@ -49,7 +49,7 @@ annot <- left_join(gds.sample.id, pheno.dat)
 annot <- annot[,c("sample.id",colnames(annot)[colnames(annot)%in%c(phenotypes,covariates)], "PC1.pheno","PC2.pheno","PC3.pheno","PC4.pheno")]
 
 analysis.sample.id <- na.omit(annot[,c("sample.id",colnames(annot)[colnames(annot)%in%c(phenotypes,covariates)])])$sample.id
-#print(paste0("number of individuals to include : ",length(analysis.sample.id)))
+print(paste0("number of individuals to include : ",length(analysis.sample.id)))
 
 metadata <- data.frame(labelDescription=colnames(annot),row.names=names(annot))
 annot <- AnnotatedDataFrame(annot, metadata)
@@ -60,29 +60,29 @@ seqData <- SeqVarData(gds, sampleData=annot)
 if(is.na(snpset.file)){
   snpset <- snpgdsLDpruning(gds, method="corr", slide.max.bp=10e7, ld.threshold=sqrt(0.1))
   pruned <- unlist(snpset, use.names=FALSE)
-#saveRDS(pruned, "pruned.rds")
+  saveRDS(pruned, "./data/pruned.rds")
 }else{
-#  pruned <- unlist(readRDS(snpset.file))
+  pruned <- unlist(readRDS(snpset.file))
 }
 
 ####KING
 king <- snpgdsIBDKING(gds, sample.id=analysis.sample.id, snp.id=pruned, verbose=FALSE)
 kingMat <- king$kinship
 dimnames(kingMat) <- list(king$sample.id, king$sample.id)
-#saveRDS(king,"king.rds")
+saveRDS(king,"./data/king.rds")
 
 ####PC-AiR
 pcs <- pcair(seqData, kinobj=kingMat, kin.thresh=2^(-11/2),
                       divobj=kingMat, div.thresh=-2^(-11/2),
              sample.include=analysis.sample.id,
              snp.include=pruned)
-#saveRDS(pcs,"pcs.rds")
+saveRDS(pcs,"./data/pcs.rds")
 
 pc.df <- as.data.frame(pcs$vectors)
 names(pc.df) <- paste0("PC", 1:ncol(pcs$vectors))
 pc.df$sample.id <- row.names(pcs$vectors)
 pc.df <- left_join(pData(annot), pc.df, by="sample.id")
-#saveRDS(pc.df,"pc.df.rds")
+saveRDS(pc.df,"./data/pc.df.rds")
 
 png("./figures/PC1vsPC2.png")
 ggplot(pc.df, aes(PC1, PC2)) + geom_point()
