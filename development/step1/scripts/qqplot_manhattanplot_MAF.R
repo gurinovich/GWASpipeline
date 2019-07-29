@@ -1,7 +1,7 @@
 args = commandArgs(trailingOnly=TRUE)
 summary.file <- args[1]
-qqplot <- "qqplot"
-manhattan.plot <- "manhatten_plot"
+qqplot <- "./figures/qqplot"
+manhattan.plot <- "./figures/manhatten_plot"
 
 ####MAF
 MAF = 0.01
