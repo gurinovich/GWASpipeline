@@ -38,3 +38,19 @@ do
 	Rscript ./scripts/assocTestSingle.R ${gds_file}${chr}".gds" $pheno_file $phenotypes $num_covariates ${covariates[@]} ${result_file}${chr}".csv"
 done
 
+wait
+
+#summary
+system(paste0("find ./results -maxdepth 1 -name '*.csv' |",
+        "xargs -n 1 tail -n +2  |",
+        "awk -F ',' '{print $2 \",\" $3 \",\" $5 \",\" $6 \",\" $7 \",\" $8 \",\" $9 \",\" $10}'>", ${result_file}".csv"))
+
+wait
+
+system(paste0("sed -i '1i chr,pos,n.obs,freq,Score,Score.SE,Score.Stat,Score.pval' ", ${result_file}".csv"))
+
+wait
+
+#summary plots
+Rscript ./scripts/qqplot_manhattanplot_MAF.R ${result_file}".csv"
+
