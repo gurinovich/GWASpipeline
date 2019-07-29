@@ -20,7 +20,7 @@ covariates <- vector(mode = "character", length = num_covariates)
 for (i in 1:num_covariates) {
   covariates[i] <- args[4+i]
 }
-result.file <- args[6+i]
+result.file <- args[5+i]
 
 ####Open GDS
 gds <- seqOpen(gds.file)
