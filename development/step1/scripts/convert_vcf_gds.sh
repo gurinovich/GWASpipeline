@@ -41,7 +41,7 @@ done
 wait
 
 #summary
-find ./results -maxdepth 1 -name '*.csv' | xargs -n 1 tail -n +2 | awk -F ',' '{print $2 \",\" $3 \",\" $5 \",\" $6 \",\" $7 \",\" $8 \",\" $9 \",\" $10}' > ${result_file}".csv"
+find ./results -maxdepth 1 -name '*.csv' | xargs -n 1 tail -n +2 | awk -F ',' '{print $2 "," $3 "," $5 "," $6 "," $7 "," $8 "," $9 "," $10}' > ${result_file}".csv"
 
 wait
 
