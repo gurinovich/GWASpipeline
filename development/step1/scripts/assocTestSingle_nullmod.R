@@ -22,7 +22,7 @@ for (i in 1:num_covariates) {
 }
 
 ####Open GDS
-gds <- seqOpen(gds.file)
+gds <- seqOpen(paste0(gds.file,".gds"))
 
 ####Create a SeqVarData object
 pheno.dat <- read.csv(pheno.file,stringsAsFactors=F,header=T,na.strings=c(NA,""))
@@ -34,7 +34,7 @@ colnames(pheno.dat)[colnames(pheno.dat)=="PC4"] <- "PC4.pheno"
 
 gds.sample.id <- data.frame(sample.id= seqGetData(gds, "sample.id"),stringsAsFactors=F)
 
-annot <- left_join(gds.sample.id, pheno.dat, by="sample.id")
+annot <- left_join(gds.sample.id, pheno.dat)
 
 annot <- annot[,c("sample.id",colnames(annot)[colnames(annot)%in%c(phenotypes,covariates)], "PC1.pheno","PC2.pheno","PC3.pheno","PC4.pheno")]
 
