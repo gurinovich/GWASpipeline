@@ -21,11 +21,21 @@ Rscript ./scripts/combine_gds.R $gds_file
 #PC_AiR step
 Rscript ./scripts/PC_AiR.R $gds_file $pheno_file $phenotypes $num_covariates ${covariates[@]} $snpset_file
 
+#wait
+
 #GRM step
 Rscript ./scripts/PC_Relate.R $gds_file $pheno_file $phenotypes $num_covariates ${covariates[@]} $snpset_file
 
+#wait
+
 #generate Null model
-Rscript ./scripts/assocTestSingle_logistic_nullmod.R $gds_file $pheno_file $phenotypes $num_covariates ${covariates[@]} $snpset_file
+Rscript ./scripts/assocTestSingle_nullmod.R $gds_file $pheno_file $phenotypes $num_covariates ${covariates[@]}
+
+#wait
 
 #GWAS
-Rscript ./scripts/assocTestSingle_logistic.R $gds_file $pheno_file $phenotypes $num_covariates ${covariates[@]} $snpset_file
+for chr in {1..22}
+do
+	Rscript ./scripts/assocTestSingle.R ${gds_file}${chr}".gds" $pheno_file $phenotypes $num_covariates ${covariates[@]} ${result_file}${chr}".csv"
+done
+
