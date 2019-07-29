@@ -1,7 +1,6 @@
 #!/bin/bash
 
-module load R/3.5.1
-module load gcc/7.4.0
+module load R/3.6.0
 
 source $1
 
