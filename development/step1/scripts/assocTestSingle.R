@@ -20,6 +20,7 @@ covariates <- vector(mode = "character", length = num_covariates)
 for (i in 1:num_covariates) {
   covariates[i] <- args[4+i]
 }
+result.file <- args[6+i]
 
 ####Open GDS
 gds <- seqOpen(gds.file)
@@ -39,7 +40,7 @@ annot <- left_join(gds.sample.id, pheno.dat, by="sample.id")
 annot <- annot[,c("sample.id",colnames(annot)[colnames(annot)%in%c(phenotypes,covariates)], "PC1.pheno","PC2.pheno","PC3.pheno","PC4.pheno")]
 
 analysis.sample.id <- na.omit(annot[,c("sample.id",colnames(annot)[colnames(annot)%in%c(phenotypes,covariates)])])$sample.id
-#print(paste0("number of individuals to include : ",length(analysis.sample.id)))
+print(paste0("number of individuals to include : ",length(analysis.sample.id)))
 
 metadata <- data.frame(labelDescription=colnames(annot),row.names=names(annot))
 annot <- AnnotatedDataFrame(annot, metadata)
@@ -47,20 +48,20 @@ all.equal(annot$sample.id,seqGetData(gds, "sample.id"))
 seqData <- SeqVarData(gds, sampleData=annot)
 
 ####PCA
-#pc.df <- readRDS(pc.df.file)
+pc.df <- readRDS("./data/pc.df.rds")
 
 ####add PCs to sample annotation in SeqVarData object
 annot <- AnnotatedDataFrame(pc.df)
 sampleData(seqData) <- annot
 
 ####covariance matrix from pcrelate output
-#grm <- readRDS(grm.file)
+grm <- readRDS("./data/grm.rds")
 
 ####Null model
-#nullmod <- readRDS("nullmod.rds")
+nullmod <- readRDS("./data/nullmod.rds")
 
 ####GWAS
 iterator <- SeqVarBlockIterator(seqData, verbose=FALSE)
 assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
-write.csv(assoc, file = out.file, quote=FALSE, row.names=FALSE, na="")
+write.csv(assoc, file = result.file, quote=FALSE, row.names=FALSE, na="")
 
