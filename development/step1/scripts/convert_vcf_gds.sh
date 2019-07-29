@@ -16,22 +16,22 @@ wait
 #combine gds files per chromosome into one file
 Rscript ./scripts/combine_gds.R $gds_file
 
-#wait
+wait
 
 #PC_AiR step
 Rscript ./scripts/PC_AiR.R $gds_file $pheno_file $phenotypes $num_covariates ${covariates[@]} $snpset_file
 
-#wait
+wait
 
 #GRM step
 Rscript ./scripts/PC_Relate.R $gds_file $pheno_file $phenotypes $num_covariates ${covariates[@]} $snpset_file
 
-#wait
+wait
 
 #generate Null model
 Rscript ./scripts/assocTestSingle_nullmod.R $gds_file $pheno_file $phenotypes $num_covariates ${covariates[@]}
 
-#wait
+wait
 
 #GWAS
 for chr in {1..22}
