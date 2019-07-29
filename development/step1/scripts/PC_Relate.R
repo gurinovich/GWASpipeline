@@ -41,7 +41,7 @@ annot <- left_join(gds.sample.id, pheno.dat, by="sample.id")
 annot <- annot[,c("sample.id",colnames(annot)[colnames(annot)%in%c(phenotypes,covariates)], "PC1.pheno","PC2.pheno","PC3.pheno","PC4.pheno")]
 
 analysis.sample.id <- na.omit(annot[,c("sample.id",colnames(annot)[colnames(annot)%in%c(phenotypes,covariates)])])$sample.id
-#print(paste0("number of individuals to include : ",length(analysis.sample.id)))
+print(paste0("number of individuals to include : ",length(analysis.sample.id)))
 
 metadata <- data.frame(labelDescription=colnames(annot),row.names=names(annot))
 annot <- AnnotatedDataFrame(annot, metadata)
@@ -49,24 +49,24 @@ all.equal(annot$sample.id,seqGetData(gds, "sample.id"))
 seqData <- SeqVarData(gds, sampleData=annot)
 
 ####Read in pruned set
-#pruned <- readRDS("pruned.rds")
+pruned <- readRDS("./data/pruned.rds")
 
 ####KING
-#king <- readRDS("king.rds")
-#kingMat <- king$kinship
-#dimnames(kingMat) <- list(king$sample.id, king$sample.id)
+king <- readRDS("./data/king.rds")
+kingMat <- king$kinship
+dimnames(kingMat) <- list(king$sample.id, king$sample.id)
 
 ####PC-AiR
-#pcs <- readRDS("pcs.rds")
+pcs <- readRDS("./data/pcs.rds")
 
-#pc.df <- readRDS("pc.df.rds")
+pc.df <- readRDS("./data/pc.df.rds")
 
 ####PC-Relate
 seqSetFilter(seqData, variant.id=pruned)
 iterator <- SeqVarBlockIterator(seqData, variantBlock=20000, verbose=FALSE)
 pcrel <- pcrelate(iterator, pcs=pcs$vectors[,1:2], training.set=pcs$unrels)
 seqResetFilter(seqData, verbose=FALSE)
-#saveRDS(pcrel,"pcrel.rds")
+saveRDS(pcrel,"./data/pcrel.rds")
 
 kinship <- pcrel$kinBtwn
 png("./figures/kinship.png")
@@ -83,5 +83,5 @@ sampleData(seqData) <- annot
 
 ####covariance matrix from pcrelate output
 grm <- pcrelateToMatrix(pcrel, scaleKin=2)
-#saveRDS(grm,"grm.rds")
+saveRDS(grm,"./data/grm.rds")
 
