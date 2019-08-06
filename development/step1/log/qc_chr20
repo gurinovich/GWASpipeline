@@ -1,0 +1,19 @@
+
+VCFtools - 0.1.16
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--gzvcf ./data/vcf_file20.vcf.gz
+	--max-alleles 2
+	--hwe 1e-06
+	--max-missing 0.01
+	--recode
+	--stdout
+
+Using zlib version: 1.2.7
+Warning: Expected at least 2 parts in FORMAT entry: ID=GP,Number=3,Type=Float,Description="Estimated Posterior Probabilities for Genotypes 0/0, 0/1 and 1/1">
+Warning: Expected at least 2 parts in INFO entry: ID=SF,Number=.,Type=String,Description="Source File (index to sourceFiles, f when filtered)">
+After filtering, kept 10 out of 10 Individuals
+Outputting VCF file...
+After filtering, kept 3383 out of a possible 3383 Sites
+Run Time = 0.00 seconds
