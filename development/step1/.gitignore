@@ -1,0 +1,6 @@
+log/*
+figures/*
+
+# exception to the rule
+!log/.gitkeep
+!figures/.gitkeep
