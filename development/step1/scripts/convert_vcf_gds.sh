@@ -19,45 +19,45 @@ do
 	Rscript ./scripts/convert_vcf_gds.R ${vcf_file}${chr}"_qc.vcf.gz" ${gds_file}${chr}".gds"
 done
 
-#wait
+wait
 
 #combine gds files per chromosome into one file
-#Rscript ./scripts/combine_gds.R $gds_file
+Rscript ./scripts/combine_gds.R $gds_file
 
-#wait
+wait
 
 #PC_AiR step
-#Rscript ./scripts/PC_AiR.R $gds_file $pheno_file $phenotypes $num_covariates ${covariates[@]} $snpset_file
+Rscript ./scripts/PC_AiR.R $gds_file $pheno_file $phenotypes $num_covariates ${covariates[@]} $snpset_file
 
-#wait
+wait
 
 #GRM step
-#Rscript ./scripts/PC_Relate.R $gds_file $pheno_file $phenotypes $num_covariates ${covariates[@]} $snpset_file
+Rscript ./scripts/PC_Relate.R $gds_file $pheno_file $phenotypes $num_covariates ${covariates[@]} $snpset_file
 
-#wait
+wait
 
 #generate Null model
-#Rscript ./scripts/assocTestSingle_nullmod.R $gds_file $pheno_file $phenotypes $num_covariates ${covariates[@]}
+Rscript ./scripts/assocTestSingle_nullmod.R $gds_file $pheno_file $phenotypes $num_covariates ${covariates[@]}
 
-#wait
+wait
 
 #GWAS
-#for chr in {1..22}
-#do
-#	Rscript ./scripts/assocTestSingle.R ${gds_file}${chr}".gds" $pheno_file $phenotypes $num_covariates ${covariates[@]} ${result_file}${chr}".csv"
-#done
+for chr in {1..22}
+do
+	Rscript ./scripts/assocTestSingle.R ${gds_file}${chr}".gds" $pheno_file $phenotypes $num_covariates ${covariates[@]} ${result_file}${chr}".csv"
+done
 
-#wait
+wait
 
 #summary
-#find ./results -maxdepth 1 -name '*.csv' | xargs -n 1 tail -n +2 | awk -F ',' '{print $2 "," $3 "," $5 "," $6 "," $7 "," $8 "," $9 "," $10}' > ${result_file}".csv"
+find ./results -maxdepth 1 -name '*.csv' | xargs -n 1 tail -n +2 | awk -F ',' '{print $2 "," $3 "," $5 "," $6 "," $7 "," $8 "," $9 "," $10}' > ${result_file}".csv"
 
-#wait
+wait
 
-#sed -i '1i chr,pos,n.obs,freq,Score,Score.SE,Score.Stat,Score.pval' ${result_file}".csv"
+sed -i '1i chr,pos,n.obs,freq,Score,Score.SE,Score.Stat,Score.pval' ${result_file}".csv"
 
-#wait
+wait
 
 #summary plots
-#Rscript ./scripts/qqplot_manhattanplot_MAF.R ${result_file}".csv"
+Rscript ./scripts/qqplot_manhattanplot_MAF.R ${result_file}".csv"
 
