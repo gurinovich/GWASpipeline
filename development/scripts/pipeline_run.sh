@@ -2,6 +2,7 @@
 
 module load R/3.6.0
 module load vcftools
+module load bcftools
 
 source $1
 
