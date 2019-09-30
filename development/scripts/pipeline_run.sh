@@ -17,7 +17,7 @@ wait
 #convert VCF files to GDS files
 for chr in {1..22}
 do
-	Rscript ./scripts/convert_vcf_gds.R ${vcf_file}${chr}"_qc.vcf.gz" ${gds_file}${chr}".gds"
+	Rscript ./scripts/convert_vcf_gds.R ${vcf_file}${chr}"_qc2.vcf.gz" ${gds_file}${chr}".gds"
 done
 
 wait
