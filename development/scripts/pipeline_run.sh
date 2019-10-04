@@ -42,6 +42,8 @@ Rscript ./scripts/assocTestSingle_nullmod.R $gds_file $pheno_file $phenotypes $n
 
 wait
 
+mkdir ./results
+
 #GWAS
 for chr in {1..22}
 do
