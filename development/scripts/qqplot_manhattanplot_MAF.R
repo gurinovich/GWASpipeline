@@ -103,7 +103,7 @@ dev.off()
 dat <- dat[dat$freq > MAF & dat$freq < 1-MAF,]
 
 ####qqplot (filter out MAF)
-png(paste(qqplot,"_MAF>",MAF,".png",sep=""))
+png(paste(qqplot,"_MAF_",MAF,".png",sep=""))
 lambda_logp(dat$Score.pval)
 dev.off()
 
@@ -134,7 +134,7 @@ limit.bf <- min(log10.pval)
 L.1 <- 0
 L.2 <- 0
 
-png(paste(manhattan.plot,"_MAF>",MAF,".png",sep=""),width=1440,height=480,pointsize = 11)
+png(paste(manhattan.plot,"_MAF_",MAF,".png",sep=""),width=1440,height=480,pointsize = 11)
 par(mai=(c(0.65, 0.35, 0.35, 0.42) ))
 plot(x,(log10.pval),ylim=c(limit.bf,max(log10.pval)),ylab="",axes=F,xlab="",cex=1.5,cex.lab=1.5,cex.axis=1.4)
 axis(side=1, at=x.val, label=lab.chrom,cex.axis=1.4)
