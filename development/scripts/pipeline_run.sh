@@ -68,7 +68,7 @@ wait
 ### calculate and add CAFs to the results
 
 #To create files for each of the subgroups in the phenotype file in the column "group" (FOR NOW ASSUME it is provided - EDIT later if not provided):
-sh ./scripts/samples_lists_create.R $pheno_file
+Rscript ./scripts/samples_lists_create.R $pheno_file
 
 wait
 
