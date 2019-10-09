@@ -3,6 +3,7 @@
 module load R/3.6.0
 module load vcftools
 module load bcftools
+module load plink/2.00a1LM
 
 source $1
 
@@ -62,3 +63,41 @@ wait
 #summary plots
 Rscript ./scripts/qqplot_manhattanplot_MAF.R ${result_file}".csv"
 
+wait
+
+### calculate and add CAFs to the results
+
+#To create files for each of the subgroups in the phenotype file in the column "group" (FOR NOW ASSUME it is provided - EDIT later if not provided):
+sh ./scripts/samples_lists_create.R $pheno_file
+
+wait
+
+# calculate allele frequencies for each group of subjects
+file=$data_folder"groups.txt"
+
+groups=()
+while IFS= read -r line; do
+  groups+=("$line")
+done < $file
+
+for i in "${groups[@]}"
+do
+  for j in {1..22}
+  do
+  bcftools view -S ${data_folder}${i}.txt ${vcf_file}${j}"_qc2.vcf.gz" -o ${data_folder}${i}.$j.temp
+  wait
+  plink2 --vcf ${data_folder}${i}.$j.temp --double-id --freq --out ${data_folder}${i}.$j
+  wait
+  bcftools query -f "%CHROM\t%POS\t%ID\t%REF\t%ALT\t%QUAL\t%FILTER[\t%DS]\n" ${data_folder}${i}.$j.temp -o ${data_folder}${i}.$j.dosages
+  done
+done
+
+wait
+
+#calculate CAFs from dosages:
+Rscript ./scripts/calc_cafs_dosages.R $data_folder
+
+wait
+
+# add info on AFs and others to the results files (updates the files)
+Rscript ./scripts/combine_results.R $data_folder $result_file
