@@ -20,6 +20,7 @@ covariates <- vector(mode = "character", length = num_covariates)
 for (i in 1:num_covariates) {
   covariates[i] <- args[4+i]
 }
+model <- args[5+i]
 
 ####Open GDS
 gds <- seqOpen(paste0(gds.file,".gds"))
@@ -57,9 +58,16 @@ sampleData(seqData) <- annot
 grm <- readRDS("./data/grm.rds")
 
 ####Null model
+if(model=="linear"){
+	model.switch <- "gaussian"
+}
+if(model=="logistic"){
+	model.switch <- "binomial")
+}
 nullmod <- fitNullModel(seqData, outcome=phenotypes, 
                         covars=covariates,
-                        cov.mat=grm, verbose=T)
+                        cov.mat=grm,
+                        family=model.switch, verbose=T)
 
 saveRDS(nullmod,"./data/nullmod.rds")
 
