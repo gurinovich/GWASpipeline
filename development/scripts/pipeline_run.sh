@@ -39,14 +39,14 @@ Rscript ./scripts/PC_Relate.R $gds_file $pheno_file $phenotypes $num_covariates 
 wait
 
 #generate Null model
-Rscript ./scripts/assocTestSingle_nullmod.R $gds_file $pheno_file $phenotypes $num_covariates ${covariates[@]}
+Rscript ./scripts/assocTestSingle_nullmod.R $gds_file $pheno_file $phenotypes $num_covariates ${covariates[@]} $model
 
 wait
 
 #GWAS
 for chr in {1..22}
 do
-	Rscript ./scripts/assocTestSingle.R ${gds_file}${chr}".gds" $pheno_file $phenotypes $num_covariates ${covariates[@]} ${result_file}${chr}".csv"
+	Rscript ./scripts/assocTestSingle.R ${gds_file}${chr}".gds" $pheno_file $phenotypes $num_covariates ${covariates[@]} ${result_file}${chr}".csv" $test
 done
 
 wait
