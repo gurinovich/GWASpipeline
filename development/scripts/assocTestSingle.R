@@ -64,5 +64,5 @@ nullmod <- readRDS("./data/nullmod.rds")
 ####GWAS
 iterator <- SeqVarBlockIterator(seqData, verbose=FALSE)
 assoc <- assocTestSingle(iterator, nullmod, test=test, imputed=T, verbose=FALSE)
-write.csv(assoc, file = result.file, quote=FALSE, row.names=FALSE, na="")
+write.csv(assoc, file = result.file, quote=FALSE, row.names=FALSE)
 
