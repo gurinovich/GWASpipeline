@@ -8,7 +8,7 @@ MAF = 0.01
 
 ####input data
 dat <- read.csv(summary.file,header = T,stringsAsFactors = F,na.strings=c(NA,""))
-dat <- dat[which(!is.na(dat$Score.pval)),]
+dat <- dat[which(!is.na(dat$pval)),]
 
 ####qqplot
 lambda_logp=function (data, plot = TRUE, proportion = 1, ...) 
@@ -52,7 +52,7 @@ main=paste("Lambda=",signif(s[1,1],5)," SE=",signif(s[1,2],5),sep=""), cex.lab=1
 }
 
 png(paste(qqplot,".png",sep=""))
-lambda_logp(dat$Score.pval)
+lambda_logp(dat$pval)
 dev.off()
 
 ####manhattan plot
@@ -63,7 +63,7 @@ for(i in 1:22){
   data.plot <- rbind(data.plot,temp[sort(temp$pos,index.return=T)[[2]],])
 }
 
-log10.pval <- -log10(data.plot$Score.pval+0.) ## what goes on y-axis
+log10.pval <- -log10(data.plot$pval+0.) ## what goes on y-axis
 color.length <- c(1,unlist(table(data.plot$chr)))
 color.choice <- c(rep(c("darkred", "red"), 11),"darkred")
 
@@ -104,7 +104,7 @@ dat <- dat[dat$freq > MAF & dat$freq < 1-MAF,]
 
 ####qqplot (filter out MAF)
 png(paste(qqplot,"_MAF_",MAF,".png",sep=""))
-lambda_logp(dat$Score.pval)
+lambda_logp(dat$pval)
 dev.off()
 
 ####manhattan plot (filter out MAF)
@@ -115,7 +115,7 @@ for(i in 1:22){
   data.plot <- rbind(data.plot,temp[sort(temp$pos,index.return=T)[[2]],])
 }
 
-log10.pval <- -log10(data.plot$Score.pval+0.) ## what goes on y-axis
+log10.pval <- -log10(data.plot$pval+0.) ## what goes on y-axis
 color.length <- c(1,unlist(table(data.plot$chr)))
 color.choice <- c(rep(c("darkred", "red"), 11),"darkred")
 
