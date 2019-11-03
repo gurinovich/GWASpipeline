@@ -21,7 +21,7 @@ for (i in 1:num_covariates) {
   covariates[i] <- args[4+i]
 }
 result.file <- args[5+i]
-test <- args[5+i]
+test <- args[6+i]
 
 ####Open GDS
 gds <- seqOpen(gds.file)
