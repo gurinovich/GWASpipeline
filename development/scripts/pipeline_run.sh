@@ -56,7 +56,7 @@ find ./results -maxdepth 1 -name '*.csv' | xargs -n 1 tail -n +2 | awk -F ',' '{
 
 wait
 
-sed -i '1i chr,pos,n.obs,freq,Score,Score.SE,Score.Stat,Score.pval' ${result_file}".csv"
+sed -i '1i chr,pos,n.obs,freq,Est,Est.SE,Stat,pval' ${result_file}".csv"
 
 wait
 
