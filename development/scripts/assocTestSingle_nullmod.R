@@ -62,7 +62,7 @@ if(model=="linear"){
 	model.switch <- "gaussian"
 }
 if(model=="logistic"){
-	model.switch <- "binomial")
+	model.switch <- "binomial"
 }
 nullmod <- fitNullModel(seqData, outcome=phenotypes, 
                         covars=covariates,
