@@ -1,13 +1,13 @@
 vcf_file="./data/vcf_file"
 gds_file="./data/gds_file"
-pheno_file="./data/pheno_file.csv"
+pheno_file="./data/pheno_file_logistic.csv"
 phenotypes="outcome"
 num_covariates=6
 covariates=('age' 'sex' 'PC1' 'PC2' 'PC3' 'PC4')
 snpset_file=""
 result_file="./results/result_file"
 data_folder="./data/"
-model="linear" 
+model="logistic" 
  ##accept c("linear", "logistic")
 test="Wald" 
  ##accept c("Wald", "Score"); if model="logistic", Score test will be used regardless of the test variable specified.

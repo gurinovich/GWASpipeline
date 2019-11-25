@@ -11,7 +11,6 @@ caf <- function(x) {
   sum(x) / (2*length(x))
 }
 
-#groups <- c("NECS.old", "NECS.new", "Illumina", "cases", "controls", "NECS.old.controls")
 groups <- read.table(paste0(work.dir, "groups.txt"))
 groups <- as.vector(groups$V1)
 
