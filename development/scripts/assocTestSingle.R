@@ -7,9 +7,9 @@ library(SNPRelate)
 library(ggplot2)
 
 args = commandArgs(trailingOnly=TRUE)
-#gds.file <- "./data/gds_file"
+#gds.file <- "./data/gds_file1.gds"
 gds.file <- args[1]
-#pheno.file <- "./data/pheno_file.csv"
+#pheno.file <- "./data/pheno_file_logistic.csv"
 pheno.file <- args[2]
 #phenotypes <- "outcome"
 phenotypes <- args[3]
@@ -20,11 +20,16 @@ covariates <- vector(mode = "character", length = num_covariates)
 for (i in 1:num_covariates) {
   covariates[i] <- args[4+i]
 }
+# result.file <- "./results/result_file1.csv"
 result.file <- args[5+i]
+# test <- "Wald" 
 test <- args[6+i]
 
 ####Open GDS
 gds <- seqOpen(gds.file)
+
+#save vector with snps rs ids
+snps <- seqGetData(gds, "annotation/id")
 
 ####Create a SeqVarData object
 pheno.dat <- read.csv(pheno.file,stringsAsFactors=F,header=T,na.strings=c(NA,""))
@@ -35,6 +40,8 @@ colnames(pheno.dat)[colnames(pheno.dat)=="PC3"] <- "PC3.pheno"
 colnames(pheno.dat)[colnames(pheno.dat)=="PC4"] <- "PC4.pheno"
 
 gds.sample.id <- data.frame(sample.id= seqGetData(gds, "sample.id"),stringsAsFactors=F)
+
+#head(data.frame(sample.id= seqGetData(gds, "annotation/id"),stringsAsFactors=F))
 
 annot <- left_join(gds.sample.id, pheno.dat)
 
@@ -64,5 +71,7 @@ nullmod <- readRDS("./data/nullmod.rds")
 ####GWAS
 iterator <- SeqVarBlockIterator(seqData, verbose=FALSE)
 assoc <- assocTestSingle(iterator, nullmod, test=test, imputed=T, verbose=FALSE)
+assoc$variant.id <- snps
+
 write.csv(assoc, file = result.file, quote=FALSE, row.names=FALSE)
 
