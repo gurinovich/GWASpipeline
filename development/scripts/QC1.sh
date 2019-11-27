@@ -2,7 +2,7 @@
 
 vcf_file=$1".vcf.gz"
 
-# remove SNPs with < 1% missing rate
+# remove SNPs with > 1% missing rate
 vcftools --gzvcf $vcf_file --max-missing 0.99 --recode --stdout | gzip -c > $1"_qc.vcf.gz"
 
 wait
