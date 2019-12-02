@@ -3,7 +3,6 @@ gds_file="./data/gds_file"
 pheno_file="./data/pheno_file_logistic.csv"
 phenotypes="outcome"
 covariates=('age' 'sex' 'PC1' 'PC2' 'PC3' 'PC4')
-num_covariates="${#covariates[@]}"
 snpset_file=""
 result_file="./results/result_file"
 data_folder="./data/"
