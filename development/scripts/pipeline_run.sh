@@ -6,6 +6,7 @@ module load bcftools
 module load plink/2.00a1LM
 
 source $1
+num_covariates="${#covariates[@]}"
 
 #QC
 for chr in {1..22}
