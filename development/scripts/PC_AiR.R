@@ -71,6 +71,7 @@ if(is.na(snpset.file)){
   snpset.dat$chr_pos <- paste0(snpset.dat$chr, ":", snpset.dat$pos)
   snp.intersect.dat <- snp.dat[snp.dat$chr_pos%in% snpset.dat$chr_pos,]
   pruned <- unlist(snp.intersect.dat$variant.id)
+  saveRDS(pruned, "./data/pruned.rds")
 }
 
 ####KING
