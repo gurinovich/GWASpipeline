@@ -58,17 +58,18 @@ all.equal(annot$sample.id,seqGetData(gds, "sample.id"))
 seqData <- SeqVarData(gds, sampleData=annot)
 
 ####LD pruning to get variant set
-snp.dat <- data.frame(variant.id = seqGetData(gds, "variant.id"), chr_pos = paste0(seqGetData(gds, "chromosome"), seqGetData(gds, "position")))
+snp.dat <- data.frame(variant.id = seqGetData(gds, "variant.id"), chr = seqGetData(gds, "chromosome"), pos = seqGetData(gds, "position"))
+snp.dat$chr_pos <- paste0(snp.dat$chr, ":", snp.dat$pos)
 if(is.na(snpset.file)){
   snpset <- snpgdsLDpruning(gds, method="corr", slide.max.bp=10e7, ld.threshold=sqrt(0.1))
   pruned <- unlist(snpset, use.names=FALSE)
   saveRDS(pruned, "./data/pruned.rds")
   pruned.dat <- snp.dat[snp.dat$variant.id%in%pruned,]
-  fwrite(pruned.dat, "snpset.txt", quote=FALSE, row.names=FALSE, )
+  fwrite(pruned.dat[,c("chr", "pos")], "./data/snpset.txt", quote=FALSE, row.names=FALSE, )
 }else{
   snpset.dat <- fread(snpset.file,stringsAsFactors=F,header=T,na.strings=c(NA,""))
-  chr_pos <- paste0(snpset.dat$chr, snpset.dat$pos)
-  snp.intersect.dat <- snp.dat[snp.dat$chr_pos%in% chr_pos,]
+  snpset.dat$chr_pos <- paste0(snpset.dat$chr, ":", snpset.dat$pos)
+  snp.intersect.dat <- snp.dat[snp.dat$chr_pos%in% snpset.dat$chr_pos,]
   pruned <- unlist(snp.intersect.dat$variant.id)
 }
 
