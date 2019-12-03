@@ -10,3 +10,4 @@ model="logistic"
  ##accept c("linear", "logistic")
 test="Wald" 
  ##accept c("Wald", "Score"); if model="logistic", Score test will be used regardless of the test variable specified.
+refver="hg19"

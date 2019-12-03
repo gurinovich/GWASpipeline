@@ -4,9 +4,12 @@ module load R/3.6.0
 module load vcftools
 module load bcftools
 module load plink/2.00a1LM
+module load annovar/2018apr
 
 source $1
 num_covariates="${#covariates[@]}"
+mkdir ./tmp
+
 
 #QC
 for chr in {1..22}
@@ -102,3 +105,30 @@ wait
 
 # add info on AFs and others to the results files (updates the files)
 Rscript ./scripts/combine_results.R $data_folder $result_file
+
+wait
+
+#create input files for annovar
+for chr in {1..22}
+do
+        Rscript ./scripts/prep_annovar_input.R $chr
+done
+
+wait
+
+#Download humandb with specified version
+
+annotate_variation.pl -downdb -buildver $refver -webfrom annovar refGene ./tmp/humandb/
+wait
+
+# Run annovar
+
+for chr in {1..22}
+do
+table_annovar.pl -build $refver ./tmp/"result_file"${chr}"_snps_input.txt" ./tmp/humandb/ -out ./results/"chr"${chr}"_EL_GWAS" -remove -protocol refGene -operation g -nastring . -csvout
+done
+
+##Remove tmp dir
+\rm -rf ./tmp
+
+
