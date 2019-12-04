@@ -65,56 +65,52 @@ wait
 #summary plots
 Rscript ./scripts/qqplot_manhattanplot_MAF.R ${result_file}".csv"
 
-#wait
+wait
 
 ### calculate and add CAFs to the results
 #To create files for each of the subgroups in the phenotype file in the column "group" and allele frequencies for cases and controls if model == "logistic":
 
-#Rscript ./scripts/samples_lists_create.R $pheno_file $model
+Rscript ./scripts/samples_lists_create.R $pheno_file $model
 
-#wait
+
+wait
 
 # calculate allele frequencies for each group of subjects
-#sh ./scripts/get_dosages_groups.sh $data_folder $vcf_file
+sh ./scripts/get_dosages_groups.sh $vcf_file
 
-#wait
+wait
 
 #calculate CAFs from dosages:
-#Rscript ./scripts/calc_cafs_dosages.R
+Rscript ./scripts/calc_cafs_dosages.R
 
-#wait
+wait
 
 # add info on AFs and others to the results files (updates the files)
-#Rscript ./scripts/combine_results.R $result_file
+Rscript ./scripts/combine_results.R $result_file
 
-#wait
+wait
 
 #rm -rf .tmp/*
 
-#to fix scripts (to make them reusable below):
-
-
 #create input files for annovar
-#for chr in {1..22}
-#do
-#  Rscript ./scripts/prep_annovar_input.R $chr
-#done
+for chr in {1..22}
+do
+  Rscript ./scripts/prep_annovar_input.R $chr
+done
 
-#wait
+wait
 
 #Download humandb with specified version
 
-#annotate_variation.pl -downdb -buildver $refver -webfrom annovar refGene ./tmp/humandb/
-#wait
+annotate_variation.pl -downdb -buildver $refver -webfrom annovar refGene ./tmp/humandb/
+wait
 
 # Run annovar
 
-#for chr in {1..22}
-#do
-#table_annovar.pl -build $refver ./tmp/"result_file"${chr}"_snps_input.txt" ./tmp/humandb/ -out ./results/"chr"${chr}"_EL_GWAS" -remove -protocol refGene -operation g -nastring . -csvout
-#done
+for chr in {1..22}
+do
+table_annovar.pl -build $refver ./tmp/"result_file"${chr}"_snps_input.txt" ./tmp/humandb/ -out ./results/"chr"${chr}"_EL_GWAS" -remove -protocol refGene -operation g -nastring . -csvout
+done
 
 ##Remove tmp dir
-#\rm -rf ./tmp
-
-
+\rm -rf ./tmp
