@@ -1,5 +1,6 @@
 #!/bin/bash
 
+module load anaconda3/5.2.0
 module load R/3.6.0
 module load vcftools
 module load bcftools
@@ -14,7 +15,7 @@ mkdir ./tmp
 #QC
 for chr in {1..22}
 do
-	sh ./scripts/QC1.sh ${vcf_file}${chr} &> "./log/qc_chr"$chr
+	sh ./scripts/QC1.sh ${vcf_file}${chr} &> "./tmp/qc_chr"$chr
 done
 
 wait
@@ -55,12 +56,9 @@ done
 
 wait
 
-#summary
-find ./results -maxdepth 1 -name '*.csv' | xargs -n 1 tail -n +2 | awk -F ',' '{print $1 "," $2 "," $3 "," $5 "," $6 "," $7 "," $8 "," $9 "," $10}' > ${result_file}".csv"
+#combine and clean the result file
 
-wait
-
-sed -i '1i rs.id,chr,pos,n.obs,freq,Est,Est.SE,Stat,pval' ${result_file}".csv"
+Rscript ./scripts/combine_results_files.R $result_file
 
 wait
 
@@ -71,18 +69,27 @@ wait
 
 ### calculate and add CAFs to the results
 
-#To create files for each of the subgroups in the phenotype file in the column "group" (FOR NOW ASSUME it is provided - EDIT later if not provided, or indicate that it has to be provided and the same value can be in it if no different groups to compare) AND allele frequencies for cases and controls if model == "logistic":
+#To create files for each of the subgroups in the phenotype file in the column "group" and allele frequencies for cases and controls if model == "logistic":
+
 Rscript ./scripts/samples_lists_create.R $pheno_file $model
 
 wait
 
 # calculate allele frequencies for each group of subjects
-file=$data_folder"groups.txt"
+file="./tmp/groups.txt"
 
 groups=()
 while IFS= read -r line; do
   groups+=("$line")
 done < $file
+
+
+
+
+
+# to remove ${vcf_file}${j}"_qc2.vcf.gz" FILES
+
+
 
 for i in "${groups[@]}"
 do

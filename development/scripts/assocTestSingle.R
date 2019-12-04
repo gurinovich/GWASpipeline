@@ -73,5 +73,10 @@ iterator <- SeqVarBlockIterator(seqData, verbose=FALSE)
 assoc <- assocTestSingle(iterator, nullmod, test=test, imputed=T, verbose=FALSE)
 assoc$variant.id <- snps
 
+assoc <- assoc %>%
+  select(-4) %>%
+  rename(rs.id = variant.id) %>%
+  arrange(Score.pval)
+
 write.csv(assoc, file = result.file, quote=FALSE, row.names=FALSE)
 

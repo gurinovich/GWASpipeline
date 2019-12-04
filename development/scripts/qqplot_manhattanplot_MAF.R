@@ -1,4 +1,7 @@
+library(dplyr)
+
 args = commandArgs(trailingOnly=TRUE)
+#summary.file <- "./results/result_file.csv"
 summary.file <- args[1]
 qqplot <- "./figures/qqplot"
 manhattan.plot <- "./figures/manhatten_plot"
@@ -8,6 +11,10 @@ MAF = 0.01
 
 ####input data
 dat <- read.csv(summary.file,header = T,stringsAsFactors = F,na.strings=c(NA,""))
+dat <- as.tbl(dat)
+dat <- dat %>%
+  rename(pval = contains("pval"))
+
 dat <- dat[which(!is.na(dat$pval)),]
 
 ####qqplot

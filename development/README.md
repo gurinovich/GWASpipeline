@@ -7,3 +7,10 @@ sh ./scripts/pipeline_run.sh ./data/arguments.txt
 ```
 
 Minimum recommended number of samples to use (for the models to converge) is 100.
+
+To sage changes in:
+
+
+
+remove log folder
+

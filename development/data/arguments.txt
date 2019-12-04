@@ -1,3 +1,4 @@
+refver="hg19"
 vcf_file="./data/vcf_file"
 gds_file="./data/gds_file"
 pheno_file="./data/pheno_file_logistic.csv"
@@ -10,4 +11,4 @@ model="logistic"
  ##accept c("linear", "logistic")
 test="Wald" 
  ##accept c("Wald", "Score"); if model="logistic", Score test will be used regardless of the test variable specified.
-refver="hg19"
+

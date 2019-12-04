@@ -16,7 +16,7 @@ for (g in group_names) {
   pheno %>%
     filter(group == g) %>%
     select(ID) %>%
-    write.table(file = paste0(dirname(pheno.file), "/", g, ".txt"), quote = F, row.names = F, col.names = F)
+    write.table(file = paste0("./tmp/", g, ".txt"), quote = F, row.names = F, col.names = F)
 }
 
 # add cases and controls groups if model == "logistic"
@@ -24,14 +24,14 @@ if (model == "logistic") {
   pheno %>%
     filter(outcome == 0) %>%
     select(ID) %>%
-    write.table(file = paste0(dirname(pheno.file), "/controls.txt"), quote = F, row.names = F, col.names = F)
+    write.table(file = "./tmp/controls.txt", quote = F, row.names = F, col.names = F)
   
   pheno %>%
     filter(outcome == 1) %>%
     select(ID) %>%
-    write.table(file = paste0(dirname(pheno.file), "/cases.txt"), quote = F, row.names = F, col.names = F)
+    write.table(file = "./tmp/cases.txt", quote = F, row.names = F, col.names = F)
   
   group_names <- c("cases", "controls", group_names)
 }
 
-write.table(as.data.frame(group_names), file = paste0(dirname(pheno.file), "/groups.txt"), row.names = FALSE, col.names = FALSE, quote = FALSE)
+write.table(as.data.frame(group_names), file = "./tmp/groups.txt", row.names = FALSE, col.names = FALSE, quote = FALSE)

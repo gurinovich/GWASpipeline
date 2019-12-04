@@ -10,4 +10,5 @@ wait
 # remove monomorphic SNPs:
 bcftools view -e 'COUNT(GT="AA")=N_SAMPLES || COUNT(GT="RR")=N_SAMPLES || COUNT(GT="AR")=N_SAMPLES || COUNT(GT="RA")=N_SAMPLES' $1"_qc.vcf.gz" -Oz -o $1"_qc2.vcf.gz"
 
-
+# remove $1"_qc.vcf.gz"
+rm $1"_qc.vcf.gz"
