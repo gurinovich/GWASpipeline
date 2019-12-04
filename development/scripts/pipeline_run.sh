@@ -1,6 +1,5 @@
 #!/bin/bash
 
-module load anaconda3/5.2.0
 module load R/3.6.0
 module load vcftools
 module load bcftools
