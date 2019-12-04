@@ -2,10 +2,10 @@ library(dplyr)
 library(data.table)
 library(purrr)
 
-args = commandArgs(trailingOnly=TRUE)
+#args = commandArgs(trailingOnly=TRUE)
 
 #work.dir <- "./data/"
-work.dir <- args[1]
+work.dir <- "./tmp/"
 
 caf <- function(x) {
   sum(x) / (2*length(x))

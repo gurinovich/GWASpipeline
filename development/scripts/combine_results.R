@@ -3,10 +3,9 @@ library(data.table)
 
 args = commandArgs(trailingOnly=TRUE)
 
-#data.dir <- "./data/"
-data.dir <- args[1]
 #res.file <- "./results/result_file"
-res.file <- args[2]
+res.file <- args[1]
+data.dir <- "./tmp/"
 
 chr <- 1
 res <- fread(paste0(res.file, chr, ".csv"))

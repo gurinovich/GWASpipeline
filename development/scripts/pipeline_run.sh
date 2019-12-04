@@ -68,7 +68,6 @@ Rscript ./scripts/qqplot_manhattanplot_MAF.R ${result_file}".csv"
 wait
 
 ### calculate and add CAFs to the results
-
 #To create files for each of the subgroups in the phenotype file in the column "group" and allele frequencies for cases and controls if model == "logistic":
 
 Rscript ./scripts/samples_lists_create.R $pheno_file $model
@@ -76,66 +75,45 @@ Rscript ./scripts/samples_lists_create.R $pheno_file $model
 wait
 
 # calculate allele frequencies for each group of subjects
-file="./tmp/groups.txt"
-
-groups=()
-while IFS= read -r line; do
-  groups+=("$line")
-done < $file
-
-
-
-
-
-# to remove ${vcf_file}${j}"_qc2.vcf.gz" FILES
-
-
-
-for i in "${groups[@]}"
-do
-  for j in {1..22}
-  do
-  bcftools view -S ${data_folder}${i}.txt ${vcf_file}${j}"_qc2.vcf.gz" -o ${data_folder}${i}.$j.temp
-  wait
-  plink2 --vcf ${data_folder}${i}.$j.temp --double-id --freq --out ${data_folder}${i}.$j
-  wait
-  bcftools query -f "%CHROM\t%POS\t%ID\t%REF\t%ALT\t%QUAL\t%FILTER[\t%DS]\n" ${data_folder}${i}.$j.temp -o ${data_folder}${i}.$j.dosages
-  done
-done
+sh ./scripts/get_dosages_groups.sh $data_folder $vcf_file
 
 wait
 
 #calculate CAFs from dosages:
-Rscript ./scripts/calc_cafs_dosages.R $data_folder
+Rscript ./scripts/calc_cafs_dosages.R
 
 wait
 
 # add info on AFs and others to the results files (updates the files)
-Rscript ./scripts/combine_results.R $data_folder $result_file
+Rscript ./scripts/combine_results.R $result_file
 
 wait
+
+
+#to fix scripts (to make them reusable below):
+
 
 #create input files for annovar
 for chr in {1..22}
 do
-        Rscript ./scripts/prep_annovar_input.R $chr
+  Rscript ./scripts/prep_annovar_input.R $chr
 done
 
 wait
 
 #Download humandb with specified version
 
-annotate_variation.pl -downdb -buildver $refver -webfrom annovar refGene ./tmp/humandb/
-wait
+#annotate_variation.pl -downdb -buildver $refver -webfrom annovar refGene ./tmp/humandb/
+#wait
 
 # Run annovar
 
-for chr in {1..22}
-do
-table_annovar.pl -build $refver ./tmp/"result_file"${chr}"_snps_input.txt" ./tmp/humandb/ -out ./results/"chr"${chr}"_EL_GWAS" -remove -protocol refGene -operation g -nastring . -csvout
-done
+#for chr in {1..22}
+#do
+#table_annovar.pl -build $refver ./tmp/"result_file"${chr}"_snps_input.txt" ./tmp/humandb/ -out ./results/"chr"${chr}"_EL_GWAS" -remove -protocol refGene -operation g -nastring . -csvout
+#done
 
 ##Remove tmp dir
-\rm -rf ./tmp
+#\rm -rf ./tmp
 
 
