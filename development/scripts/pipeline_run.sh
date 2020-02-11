@@ -111,5 +111,7 @@ do
 table_annovar.pl -build $refver ./tmp/"result_file"${chr}"_snps_input.txt" ./tmp/humandb/ -out ./results/"chr"${chr}"_EL_GWAS" -remove -protocol refGene -operation g -nastring . -csvout
 done
 
+Rscript ./scripts/add_anno_results.R ./results/ $result_file
+
 ##Remove tmp dir
 \rm -rf ./tmp
