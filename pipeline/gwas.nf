@@ -8,7 +8,15 @@ G W A S  ~  P I P E L I N E
 ================================
 indir     : $params.indir
 outdir    : $params.outdir
+
 vcf       : $params.vcf
+pheno     : $params.pheno
+snpset    : $params.snpset
+
+phenotypes: $params.phenotypes
+covars    : $params.covars
+model     : $params.model
+test      : $params.test
 
 -
 """
@@ -61,7 +69,7 @@ process qc_mono {
 
 
 /*
-** STEP 2
+** STEP 2 vcf_to_gds
 */
 process vcf_to_gds {
   publishDir "${params.outdir}/gds_files", mode: 'copy'
@@ -85,10 +93,30 @@ process merge_gds {
   file(gds) from gds_files.collect()
 
   output:
-  file 'merged.gds' into merged_gds
+  file 'merged.gds' into gds_merged
 
   script:
   """
   Rscript $PWD/scripts/02_merge_gds.R ${gds}
   """
 }
+
+/*
+** STEP 3 PCA and GRM
+*/
+process pcair {
+  publishDir "${params.outdir}/pcair", mode: 'copy'
+  
+  input:
+  file "merged.gds" from gds_merged.collect()
+
+  output:
+  file '*' into pcair
+
+  script:
+  """
+  Rscript $PWD/scripts/03_PC_AiR.R merged.gds ${params.pheno} ${params.phenotypes} ${params.covars} ${params.snpset}
+  """
+}
+
+
