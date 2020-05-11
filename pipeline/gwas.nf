@@ -79,7 +79,8 @@ process vcf_to_gds {
   file(vcf) from temp2.collect()
 
   output:
-  file '*gds' into gds_files
+  file '*' into gds_files1
+  file '*' into gds_files2
 
   script:
   """
@@ -90,14 +91,14 @@ process merge_gds {
   publishDir "${params.outdir}/gds_merged", mode: 'copy'
 
   input:
-  file(gds) from gds_files.collect()
+  file '*' from gds_files1.collect()
 
   output:
   file 'merged.gds' into gds_merged
 
   script:
   """
-  Rscript $PWD/scripts/02_merge_gds.R ${gds}
+  Rscript $PWD/scripts/02_merge_gds.R
   """
 }
 
@@ -118,5 +119,69 @@ process pcair {
   Rscript $PWD/scripts/03_PC_AiR.R merged.gds ${params.pheno} ${params.phenotypes} ${params.covars} ${params.snpset}
   """
 }
+
+process pcrelate {
+  publishDir "${params.outdir}/pcrelate", mode: 'copy'
+  
+  input:
+  file "merged.gds" from gds_merged.collect()
+  file '*' from pcair.collect()
+
+  output:
+  file '*' into pcrelate
+
+  script:
+  """
+  Rscript $PWD/scripts/03_PC_Relate.R merged.gds ${params.pheno} ${params.phenotypes} ${params.covars} ${params.snpset} pruned.rds king.rds pcs.rds pc.df.rds
+  """
+}
+
+/*
+** STEP 4 nullmod and GWAS
+*/
+process nullmod {
+  publishDir "${params.outdir}/nullmod", mode: 'copy'
+  
+  input:
+  file "merged.gds" from gds_merged.collect()
+  file '*' from pcair.collect()
+  file '*' from pcrelate.collect()
+
+  output:
+  file '*' into nullmod
+
+  script:
+  """
+  Rscript $PWD/scripts/04_nullmod.R merged.gds ${params.pheno} ${params.phenotypes} ${params.covars} ${params.model} pc.df.rds grm.rds
+  """
+}
+
+process gwas {
+  publishDir "${params.outdir}/gwas", mode: 'copy'
+  
+  input:
+  val x from fix3
+  file '*' from gds_files2.collect()
+  file '*' from pcair.collect()
+  file '*' from pcrelate.collect()
+  file '*' from nullmod.collect()
+
+  output:
+  file '*' into gwas
+
+  script:
+  """
+  Rscript $PWD/scripts/04_GWAS.R chr_${x}.gds ${params.pheno} ${params.phenotypes} ${params.covars} pc.df.rds grm.rds nullmod.rds ${params.test} chr_${x}.csv 
+  """
+}
+
+/*
+** STEP 5 summary and plot
+*/
+
+
+/*
+** STEP 6 annotation
+*/
 
 
