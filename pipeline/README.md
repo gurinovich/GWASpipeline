@@ -37,6 +37,12 @@ $ curl -s https://get.nextflow.io | bash
 
 ### Locally Run Example Data
 ```bash
+$ ./module load R/3.6.0
+$ ./module load vcftools
+$ ./module load bcftools
+$ ./module load plink/2.00a1LM
+$ ./module load annovar/2018apr
+$ ./mkdir results
 
 $ ./nextflow gwas.nf -c gwas.config
 
@@ -46,24 +52,38 @@ $ ./nextflow gwas.nf -c gwas.config
 ```bash
 
 N E X T F L O W  ~  version 19.04.1
-Launching `gwas.nf` [festering_hamilton] - revision: 782fb9722c
+Launching `gwas.nf` [irreverent_spence] - revision: 8a796af47a
 -
 
 G W A S  ~  P I P E L I N E
 
 ================================
-indir     : /Users/anthonyfederico/GitHub/GWASpipeline/pipeline/data
-outdir    : /Users/anthonyfederico/GitHub/GWASpipeline/pipeline/results
-vcf       : /Users/anthonyfederico/GitHub/GWASpipeline/pipeline/data/toy_vcf.csv
+indir     : /restricted/projectnb/necs/Zeyuan_Analysis/GWASpipeline/GWASpipeline/pipeline/data/
+outdir    : /restricted/projectnb/necs/Zeyuan_Analysis/GWASpipeline/GWASpipeline/pipeline/results
+
+vcf       : /restricted/projectnb/necs/Zeyuan_Analysis/GWASpipeline/GWASpipeline/pipeline/data//toy_vcf.csv
+pheno     : /restricted/projectnb/necs/Zeyuan_Analysis/GWASpipeline/GWASpipeline/pipeline/data//pheno_file_logistic.csv
+snpset    : /restricted/projectnb/necs/Zeyuan_Analysis/GWASpipeline/GWASpipeline/pipeline/data//snpset.txt
+
+phenotypes: outcome
+covars    : 'age,sex,PC1,PC2,PC3,PC4'
+model     : logistic
+test      : Score
 
 -
 [warm up] executor > local
-executor >  local (23)
-[b1/9519b9] process > vcf_to_gds [100%] 22 of 22 ✔
-[8b/663edf] process > merge_gds  [100%] 1 of 1 ✔
-Completed at: 02-Jun-2019 18:59:47
-Duration    : 31.1s
-CPU hours   : (a few seconds)
-Succeeded   : 23
+executor >  local (92)
+[48/a51761] process > qc_miss    [100%] 22 of 22 ✔
+[bd/b4c149] process > qc_mono    [100%] 22 of 22 ✔
+[87/979c47] process > vcf_to_gds [100%] 22 of 22 ✔
+[29/592b55] process > merge_gds  [100%] 1 of 1 ✔
+[0e/e0ef74] process > pcair      [100%] 1 of 1 ✔
+[ce/334838] process > pcrelate   [100%] 1 of 1 ✔
+[23/442a05] process > nullmod    [100%] 1 of 1 ✔
+[b3/da7597] process > gwas       [100%] 22 of 22 ✔
+Completed at: 11-May-2020 15:29:54
+Duration    : 1m 6s
+CPU hours   : 0.1
+Succeeded   : 92
 
 ```
