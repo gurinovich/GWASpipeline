@@ -12,6 +12,11 @@ conda install r-essentials r-base
 conda config --add channels bioconda
 conda install -c bioconda/label/gcc7 bioconductor-seqarray
 
+conda install -c bioconda vcftools
+conda install -c bioconda bcftools
+conda install -c bioconda plink
+conda install -c bioconda annovar
+
 ```
 
 ### Clone Repository
