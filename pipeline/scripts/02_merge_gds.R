@@ -3,4 +3,4 @@ suppressPackageStartupMessages(library(SeqArray))
 
 args <- commandArgs(trailingOnly=TRUE)
 
-seqMerge(args, "merged.gds")
+seqMerge(paste0("chr_",1:22,".gds"), "merged.gds")
