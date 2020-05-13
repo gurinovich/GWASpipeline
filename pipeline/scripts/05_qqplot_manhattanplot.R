@@ -1,0 +1,135 @@
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(latex2exp))
+
+args = commandArgs(trailingOnly=TRUE)
+summary.file <- args[1]
+qqplot <- "qqplot"
+manhattan.plot <- "manhatten_plot"
+
+####MAF
+MAF = 0.01
+
+####input data
+dat <- read.csv(summary.file,header = T,stringsAsFactors = F)
+dat <- as.tbl(dat)
+dat <- dat %>%
+  rename(pval = contains("pval"))
+dat <- dat[which(!is.na(dat$pval)),]
+
+colnames(dat)[colnames(dat)=="Wald"] <- "beta"
+colnames(dat)[colnames(dat)=="Score"] <- "beta"
+colnames(dat)[colnames(dat)=="Wald.SE"] <- "se"
+colnames(dat)[colnames(dat)=="Score.SE"] <- "se"
+
+####qqplot
+lambda_GC <- median((dat$beta/dat$se)^2)/qchisq(0.5,1)
+index <- 1:dim(dat)[1]/(dim(dat)[1]+1)
+
+png(paste(qqplot,".png",sep=""))
+plot(-log10(index), -log10(sort(dat$pval)), xlab=TeX(paste0("Expected ","$-log_{10}P$")), ylab=TeX(paste0("Observed ","$-log_{10}P$")), pch=16)
+text(0.1*max(-log10(index)),0.9*(max(-log10(sort(dat$pval)))),
+     TeX(paste0("$\\lambda = $", round(lambda_GC,4))))
+abline(0,1,col="red")
+dev.off()
+
+####manhattan plot
+data.plot <- c()
+for(i in 1:22){
+  print(i)
+  temp <- dat[which(dat$chr == i),]
+  data.plot <- rbind(data.plot,temp[sort(temp$pos,index.return=T)[[2]],])
+}
+
+log10.pval <- -log10(data.plot$pval+0.) ## what goes on y-axis
+color.length <- c(1,unlist(table(data.plot$chr)))
+color.choice <- c(rep(c("darkred", "red"), 11),"darkred")
+
+L.1 <- 0
+L.2 <- 0
+x.val <- c()
+for(i in 1: (length(color.length)-1)){
+  L.1 <- L.1 + color.length[i]
+  L.2 <- L.2 + color.length[i+1]
+  x.val <- c(x.val,(L.1+L.2)/2)
+}
+
+lab.chrom <- as.character(names(table(data.plot$chr)))
+x<- c(1: length(log10.pval))
+limit.bf <- min(log10.pval)
+L.1 <- 0
+L.2 <- 0
+
+png(paste(manhattan.plot,".png",sep=""),width=1440,height=480,pointsize = 11)
+par(mai=(c(0.65, 0.35, 0.35, 0.42) ))
+plot(x,(log10.pval),ylim=c(limit.bf,max(log10.pval)),ylab="",axes=F,xlab="",cex=1.5,cex.lab=1.5,cex.axis=1.4)
+axis(side=1, at=x.val, label=lab.chrom,cex.axis=1.4)
+axis(side=2, cex.axis=1.5,line=-2.5)
+
+for(i in 1: (length(color.length)-1)){
+  L.1 <- L.1 + color.length[i]
+  L.2 <- L.2 + color.length[i+1]
+  points( x[L.1:L.2], log10.pval[ L.1 : L.2], col=color.choice[i]) 
+}
+
+abline(-log10(5e-8),0,col="grey",lty=1,cex=1.4)
+abline(-log10(5e-6),0,col="grey",lty=2,cex=1.4)
+
+dev.off()
+
+####filter out MAF
+dat <- dat[dat$freq > MAF & dat$freq < 1-MAF,]
+
+####qqplot (filter out MAF)
+lambda_GC <- median((dat$beta/dat$se)^2)/qchisq(0.5,1)
+index <- 1:dim(dat)[1]/(dim(dat)[1]+1)
+
+png(paste(qqplot,"_MAF_",MAF,".png",sep=""))
+plot(-log10(index), -log10(sort(dat$pval)), xlab=TeX(paste0("Expected ","$-log_{10}P$")), ylab=TeX(paste0("Observed ","$-log_{10}P$")), pch=16)
+text(0.1*max(-log10(index)),0.9*(max(-log10(sort(dat$pval)))),
+     TeX(paste0("$\\lambda = $", round(lambda_GC,4))))
+abline(0,1,col="red")
+dev.off()
+
+####manhattan plot (filter out MAF)
+data.plot <- c()
+for(i in 1:22){
+  print(i)
+  temp <- dat[which(dat$chr == i),]
+  data.plot <- rbind(data.plot,temp[sort(temp$pos,index.return=T)[[2]],])
+}
+
+log10.pval <- -log10(data.plot$pval+0.) ## what goes on y-axis
+color.length <- c(1,unlist(table(data.plot$chr)))
+color.choice <- c(rep(c("darkred", "red"), 11),"darkred")
+
+L.1 <- 0
+L.2 <- 0
+x.val <- c()
+for(i in 1: (length(color.length)-1)){
+  L.1 <- L.1 + color.length[i]
+  L.2 <- L.2 + color.length[i+1]
+  x.val <- c(x.val,(L.1+L.2)/2)
+}
+
+lab.chrom <- as.character(names(table(data.plot$chr)))
+x<- c(1: length(log10.pval))
+limit.bf <- min(log10.pval)
+L.1 <- 0
+L.2 <- 0
+
+png(paste(manhattan.plot,"_MAF_",MAF,".png",sep=""),width=1440,height=480,pointsize = 11)
+par(mai=(c(0.65, 0.35, 0.35, 0.42) ))
+plot(x,(log10.pval),ylim=c(limit.bf,max(log10.pval)),ylab="",axes=F,xlab="",cex=1.5,cex.lab=1.5,cex.axis=1.4)
+axis(side=1, at=x.val, label=lab.chrom,cex.axis=1.4)
+axis(side=2, cex.axis=1.5,line=-2.5)
+
+for(i in 1: (length(color.length)-1)){
+  L.1 <- L.1 + color.length[i]
+  L.2 <- L.2 + color.length[i+1]
+  points( x[L.1:L.2], log10.pval[ L.1 : L.2], col=color.choice[i]) 
+}
+
+abline(-log10(5e-8),0,col="grey",lty=1,cex=1.4)
+abline(-log10(5e-6),0,col="grey",lty=2,cex=1.4)
+
+dev.off()
