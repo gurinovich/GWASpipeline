@@ -37,7 +37,7 @@ Channel
 process qc_miss {
   publishDir "${params.outdir}/qc1", mode: 'copy'
   tag "$id"
-
+  
   input:
   set id, vcf from vcf_files
 
@@ -73,7 +73,7 @@ process qc_mono {
 */
 process vcf_to_gds {
   publishDir "${params.outdir}/gds_files", mode: 'copy'
-  
+    
   input:
   each x from 1..22
   file(vcf) from qc2_1.collect()
@@ -81,6 +81,7 @@ process vcf_to_gds {
   output:
   file '*' into gds_files1
   file '*' into gds_files2
+  file '*' into gds_files3
 
   script:
   """
@@ -94,7 +95,9 @@ process merge_gds {
   file '*' from gds_files1.collect()
 
   output:
-  file 'merged.gds' into gds_merged
+  file 'merged.gds' into gds_merged1
+  file 'merged.gds' into gds_merged2
+  file 'merged.gds' into gds_merged3
 
   script:
   """
@@ -107,12 +110,14 @@ process merge_gds {
 */
 process pcair {
   publishDir "${params.outdir}/pcair", mode: 'copy'
-  
+      
   input:
-  file "merged.gds" from gds_merged.collect()
+  file "merged.gds" from gds_merged1.collect()
 
   output:
-  file '*' into pcair
+  file '*' into pcair1
+  file '*' into pcair2
+  file '*' into pcair3
 
   script:
   """
@@ -124,15 +129,15 @@ process pcrelate {
   publishDir "${params.outdir}/pcrelate", mode: 'copy'
   
   input:
-  file "merged.gds" from gds_merged.collect()
-  file '*' from pcair.collect()
+  file "merged.gds" from gds_merged2.collect()
+  file '*' from pcair1.collect()
 
   output:
   file '*' into pcrelate
 
   script:
   """
-  Rscript $PWD/scripts/03_PC_Relate.R merged.gds ${params.pheno} ${params.phenotypes} ${params.covars} ${params.snpset} pruned.rds king.rds pcs.rds pc.df.rds
+  Rscript $PWD/scripts/03_PC_Relate.R merged.gds ${params.pheno} ${params.phenotypes} ${params.covars} ${params.snpset} analysis.sample.id.rds annot.rds pruned.rds king.rds pcs.rds pc.df.rds
   """
 }
 
@@ -143,8 +148,8 @@ process nullmod {
   publishDir "${params.outdir}/nullmod", mode: 'copy'
   
   input:
-  file "merged.gds" from gds_merged.collect()
-  file '*' from pcair.collect()
+  file "merged.gds" from gds_merged3.collect()
+  file '*' from pcair2.collect()
   file '*' from pcrelate.collect()
 
   output:
@@ -152,26 +157,25 @@ process nullmod {
 
   script:
   """
-  Rscript $PWD/scripts/04_nullmod.R merged.gds ${params.pheno} ${params.phenotypes} ${params.covars} ${params.model} pc.df.rds grm.rds
+  Rscript $PWD/scripts/04_nullmod.R merged.gds ${params.phenotypes} ${params.covars} ${params.model} analysis.sample.id.rds annot.rds pc.df.rds grm.rds
   """
 }
 
 process gwas {
   publishDir "${params.outdir}/gwas", mode: 'copy'
-  
+    
   input:
   each x from 1..22
   file '*' from gds_files2.collect()
-  file '*' from pcair.collect()
-  file '*' from pcrelate.collect()
   file '*' from nullmod.collect()
 
   output:
-  file '*' into gwas
+  file '*' into gwas1
+  file '*' into gwas2
 
   script:
   """
-  Rscript $PWD/scripts/04_GWAS.R chr_${x}.gds ${params.pheno} ${params.phenotypes} ${params.covars} pc.df.rds grm.rds nullmod.rds ${params.test} chr_${x}.csv 
+  Rscript $PWD/scripts/04_GWAS.R chr_${x}.gds annot_pc.rds nullmod.rds ${params.test} chr_${x}.csv 
   """
 }
 
@@ -179,72 +183,20 @@ process gwas {
 ** STEP 5 summary and plot
 */
 
-process samples_by_group {
-  publishDir "${params.outdir}/samples_by_group", mode: 'copy'
+process caf_by_group {
+  publishDir "${params.outdir}/caf_by_group", mode: 'copy'
   
   input:
-  file '*' from pcair.collect()
+  each x from 1..22
+  file '*' from gds_files3.collect()
+  file '*' from pcair3.collect()
   
   output:
-  file '*' into samples_by_group
+  file '*' into caf_by_group
 
   script:
   """
-  Rscript $PWD/scripts/05_samples_lists_create.R ${params.pheno} ${params.model} analysis.sample.id.rds
-  """
-}
-
-group_datasets = Channel.fromPath(params.group)
-
-group_datasets.into {group_datasets1; group_datasets2; group_datasets3}
-
-process maf_by_group1 {
-  publishDir "${params.outdir}/maf_by_group1", mode: 'copy'
-  
-  input:
-  each i from 1..22
-  file group from group_datasets1
-  file '*' from qc2_2.collect()
-  
-  output:
-  file "${group}.${i}.temp" into maf_by_group1
-
-  script:
-  """
-  bcftools view -S ${group} chr_${i}_qc2.vcf.gz -o ${group}.${i}.temp
-  """
-}
-
-process maf_by_group2 {
-  publishDir "${params.outdir}/maf_by_group2", mode: 'copy'
-  
-  input:
-  each i from 1..22
-  file group from group_datasets2
-  file '*' from maf_by_group1.collect()
-  
-  output:
-  file '*' into maf_by_group2
-
-  script:
-  """
-  plink2 --vcf ${group}.${i}.temp --double-id --freq --out ${group}.${i}
-  bcftools query -f "%CHROM\t%POS\t%ID\t%REF\t%ALT\t%QUAL\t%FILTER[\t%DS]\n" ${group}.${i}.temp -o ${group}.${i}.dosages
-  """
-}
-
-process caf_dosage {
-  publishDir "${params.outdir}/caf_dosage", mode: 'copy'
-  
-  input:
-  file '*' from maf_by_group2.collect()
-  
-  output:
-  file '*' into caf_dosage
-
-  script:
-  """
-  Rscript $PWD/scripts/05_calc_cafs_dosages.R ${params.pheno} ${params.model} $PWD/results/maf_by_group2/
+  Rscript $PWD/scripts/05_caf_by_group.R chr_${x}.gds ${params.pheno} analysis.sample.id.rds ${params.model} ${params.phenotypes} chr_${x}_caf_by_group.csv
   """
 }
 
@@ -252,31 +204,32 @@ process merge_by_chr {
   publishDir "${params.outdir}/merge_by_chr", mode: 'copy'
   
   input:
-  file '*' from caf_dosage.collect()
+  each x from 1..22
+  file '*' from gwas1.collect()
+  file '*' from caf_by_group.collect()
   
   output:
   file '*' into merge_by_chr
 
   script:
   """
-  Rscript $PWD/scripts/05_merge_by_chr.R ${params.pheno} ${params.model} $PWD/results/maf_by_group2/ $PWD/results/caf_dosage/
+  Rscript $PWD/scripts/05_merge_by_chr.R chr_${x}.csv chr_${x}_caf_by_group.csv ${params.model} chr_${x}_caf_annotated.csv
   """
 }
 
-process add_to_results {
-  publishDir "${params.outdir}/add_to_results", mode: 'copy'
+process combine_results {
+  publishDir "${params.outdir}/combined_results", mode: 'copy'
   
   input:
   file '*' from merge_by_chr.collect()
   
   output:
-  file '*' into add_to_results1
-  file '*' into add_to_results2
-  file '*' into add_to_results3
+  file '*' into combined_results1
+  file '*' into combined_results2
 
   script:
   """
-  Rscript $PWD/scripts/05_combine_results.R $PWD/results/gwas/ $PWD/results/merge_by_chr/
+  Rscript $PWD/scripts/05_combine_results.R $PWD/results/merge_by_chr/
   """
 }
 
@@ -284,14 +237,14 @@ process plot {
   publishDir "${params.outdir}/qq_manhattan", mode: 'copy'
   
   input:
-  file '*' from add_to_results1.collect()
+  file '*' from combined_results1.collect()
   
   output:
   file '*' into qq_manhattan
 
   script:
   """
-  Rscript $PWD/scripts/05_qqplot_manhattanplot.R all_chr.csv
+  Rscript $PWD/scripts/05_qqplot_manhattanplot.R all_chr_caf_annotated.csv
   """
 }
 
@@ -301,17 +254,17 @@ process plot {
 
 process annovar_input {
   publishDir "${params.outdir}/annovar_input", mode: 'copy'
-  
+    
   input:
-  each x from 1..22
-  file '*' from add_to_results2.collect()
+  file '*' from combined_results2.collect()
   
   output:
-  file '*' into annovar_input
+  file '*' into annovar_input1
+  file '*' into annovar_input2
 
   script:
   """
-  Rscript $PWD/scripts/06_annovar_input.R ${x}
+  Rscript $PWD/scripts/06_annovar_input.R
   """
 }
 
@@ -328,17 +281,16 @@ process annovar_ref {
 
 process annovar {
   publishDir "${params.outdir}/annovar", mode: 'copy'
-  
+    
   input:
-  each x from 1..22
-  file '*' from annovar_input.collect()
+  file '*' from annovar_input1.collect()
 
   output:
   file '*' into annovar
 
   script:
   """
-  table_annovar.pl -build ${params.ref} chr${x}_snps_input.txt $PWD/results/humandb/ -out chr${x}_annotation -remove -protocol refGene -operation g -nastring . -csvout
+  table_annovar.pl -build ${params.ref} top_snps_input.txt $PWD/results/humandb/ -out top_annotation -remove -protocol refGene -operation g -nastring . -csvout
   """
 }
 
@@ -346,8 +298,7 @@ process add_annovar {
   publishDir "${params.outdir}/annotated_results", mode: 'copy'
   
   input:
-  each x from 1..22
-  file '*' from add_to_results3.collect()
+  file '*' from annovar_input2.collect()
   file '*' from annovar.collect()
 
   output:
@@ -355,7 +306,7 @@ process add_annovar {
 
   script:
   """
-  Rscript $PWD/scripts/06_add_anno_results.R ${x} ${params.ref}
+  Rscript $PWD/scripts/06_add_anno_results.R
   """
 }
 
