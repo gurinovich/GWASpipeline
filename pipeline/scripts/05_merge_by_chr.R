@@ -1,53 +1,25 @@
 suppressPackageStartupMessages(library(dplyr))
 suppressPackageStartupMessages(library(data.table))
-suppressPackageStartupMessages(library(purrr))
 
 args = commandArgs(trailingOnly=TRUE)
-pheno.file <- args[1]
-model <- args[2] 
-path1 <- args[3]
-path2 <- args[4]
+result.file <- args[1]
+caf.file <- args[2] 
+model <- args[3]
+combine.file <- args[4]
 
-pheno <- read.csv(pheno.file, stringsAsFactors = F)
-pheno <- as.tbl(pheno)
-group_names <- names(table(pheno$group))
+
+result.dat <- fread(result.file, stringsAsFactors = F, header = T)
+caf.dat <- fread(caf.file, stringsAsFactors = F, header = T)
+
+combine.dat <- left_join(result.dat, caf.dat, by=c("chr","pos"))
+maf <- ifelse(combine.dat$caf>0.5, 1-combine.dat$caf, combine.dat$caf)
+out.dat <- combine.dat[maf*2*combine.dat$n.obs>0.99,]
 
 if (model == "logistic") {
-	group_names <- c(group_names, "cases", "controls")
-}
-	
-caf <- function(x) {
-  sum(x) / (2*length(x))
+	case.maf <- ifelse(combine.dat$case.caf>0.5, 1-combine.dat$case.caf, combine.dat$case.caf)
+	control.maf <- ifelse(combine.dat$control.caf>0.5, 1-combine.dat$control.caf, combine.dat$control.caf)
+
+	out.dat <- out.dat[(case.maf*2*out.dat$n.case>0.99)&(control.maf*2*out.dat$n.control>0.99),]
 }
 
-groups <- as.vector(group_names)
-
-#merge files per choromosome:
-
-for(chr in 1:22) {
-  gr <- groups[1]
-  genAF1 <- fread(paste0(path1, gr, ".txt.", chr, ".afreq"), stringsAsFactors = F, header = T)
-  genAF1 <- as.tbl(genAF1)
-  names(genAF1)[c(1, 5:6)] <- c("CHROM", paste0("CAF_geno_", gr) , paste0(names(genAF1)[6], "_", gr))
-  genAF2 <- fread(paste0(path2, gr, ".", chr, ".CAF_dosages.csv"), stringsAsFactors = F, header = T)
-  genAF2 <- as.tbl(genAF2)
-    names(genAF2)[7] <- paste0(names(genAF2)[7], "_", gr)
-  data1 <- genAF1 %>%
-    inner_join(genAF2, by = c("CHROM", "ID", "REF", "ALT")) %>%
-    select(CHROM, POS, ID:ALT, FILTER, starts_with("OBS_CT_"), starts_with("CAF_geno_"), starts_with("CAF_dos_"))
-  data2 <- data1
-#gr <- groups[2]
-  for (gr in groups[2:length(groups)]) {
-    genAF1 <- fread(paste0(path1, gr, ".txt.", chr, ".afreq"), stringsAsFactors = F, header = T)
-    genAF1 <- as.tbl(genAF1)
-    names(genAF1)[c(1, 5:6)] <- c("CHROM", paste0("CAF_geno_", gr) , paste0(names(genAF1)[6], "_", gr))
-    genAF2 <- fread(paste0(path2, gr, ".", chr, ".CAF_dosages.csv"), stringsAsFactors = F, header = T)
-    genAF2 <- as.tbl(genAF2)
-    names(genAF2)[7] <- paste0(names(genAF2)[7], "_", gr)
-    data1 <- genAF1 %>%
-      inner_join(genAF2, by = c("CHROM", "ID", "REF", "ALT")) %>%
-      select(CHROM, POS, ID:ALT, FILTER, starts_with("OBS_CT_"), starts_with("CAF_geno_"), starts_with("CAF_dos_"))
-    data2 <- bind_cols(data2, data1[7:9])  
-  }
-  write.csv(data2, file = paste0("CAFs.chr", chr, ".csv"), row.names = F)
-}
+fwrite(out.dat, combine.file, quote=F, row.names=F)
