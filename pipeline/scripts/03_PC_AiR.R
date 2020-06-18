@@ -8,15 +8,10 @@ suppressPackageStartupMessages(library(ggplot2))
 suppressPackageStartupMessages(library(data.table))
 
 args = commandArgs(trailingOnly=TRUE)
-
 gds.file <- args[1]
-
 pheno.file <- args[2]
-
 phenotypes <- args[3]
-
 covariates <- unlist(strsplit(args[4], ","))
-
 snpset.file <- args[5]
 
 ####Open GDS
@@ -24,7 +19,7 @@ gds <- seqOpen(gds.file)
 
 ####Create a SeqVarData object
 pheno.dat <- read.csv(pheno.file, stringsAsFactors=F, header=T)
-pheno.dat$sample.id <- as.character(pheno.dat$ID)
+pheno.dat$sample.id <- as.character(pheno.dat[,1])
 
 for(i in 1:32){
 if(sum(colnames(pheno.dat)==paste0("PC",i))==1){
@@ -44,6 +39,8 @@ saveRDS(analysis.sample.id, "analysis.sample.id.rds")
 
 metadata <- data.frame(labelDescription=colnames(annot),row.names=names(annot))
 annot <- AnnotatedDataFrame(annot, metadata)
+saveRDS(annot, "annot.rds")
+
 all.equal(annot$sample.id,seqGetData(gds, "sample.id"))
 seqData <- SeqVarData(gds, sampleData=annot)
 
