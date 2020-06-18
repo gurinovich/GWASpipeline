@@ -3,29 +3,15 @@ suppressPackageStartupMessages(library(data.table))
 
 args = commandArgs(trailingOnly=TRUE)
 
-chr = args[1]
-ref = args[2]
+results <- fread("top_snps_caf_annotated.csv", header=T, stringsAsFactors=F)
+annovar <- fread("top_annotation.hg19_multianno.csv", header=T, stringsAsFactors=F)
 
-chr <- 1
-res <- fread(paste0("chr", chr, ".csv"))
-annot <- fread(paste0("chr", chr, "_annotation.", ref,"_multianno.csv"))
-annot.sub <- subset(annot[,c("Chr","Start","Func.refGene","Gene.refGene")])
-res <- res %>%
-  inner_join(annot.sub, by = c("chr" = "Chr", "pos" = "Start")) %>%
-  as.tbl()
-write.csv(res, paste0("chr", chr, "_annotation.csv"), row.names = FALSE)
-result <- res
+annovar$chr <- annovar$Chr
+annovar$pos <- annovar$Start
 
-#chr <- 2
-for (chr in 2:22) {
-res <- fread(paste0("chr", chr, ".csv"))
-annot <- fread(paste0("chr", chr, "_annotation.", ref,"_multianno.csv"))
-annot.sub <- subset(annot[,c("Chr","Start","Func.refGene","Gene.refGene")])
-  res <- res %>%
-         inner_join(annot.sub, by = c("chr" = "Chr", "pos" = "Start")) %>%
-         as.tbl()
-  write.csv(res, paste0("chr", chr, "_annotation.csv"), row.names = FALSE)
-  results <- bind_rows(result, res)
-}
+annot.results <- left_join(results, annovar, by = c("chr", "pos") )
 
-write.csv(results, paste0("All_chr_annotation.csv"), row.names = FALSE)
+annot.results <- annot.results %>%
+	select ("snpID", "chr", "pos", "REF", "ALT", contains("Score"), contains("Wald"), "pval", "n.obs", contains("n.case"), contains("n.control"), contains("caf"), contains("dosage"), contains("refGene"))
+
+fwrite(annot.results, paste0("top_snps_annotation.csv"), row.names = FALSE)
