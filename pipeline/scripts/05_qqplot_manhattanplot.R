@@ -1,5 +1,6 @@
 suppressPackageStartupMessages(library(dplyr))
 suppressPackageStartupMessages(library(latex2exp))
+suppressPackageStartupMessages(library(data.table))
 
 args = commandArgs(trailingOnly=TRUE)
 summary.file <- args[1]
@@ -10,7 +11,7 @@ manhattan.plot <- "manhatten_plot"
 MAF = 0.01
 
 ####input data
-dat <- read.csv(summary.file,header = T,stringsAsFactors = F)
+dat <- fread(summary.file,header = T,stringsAsFactors = F)
 dat <- as.tbl(dat)
 dat <- dat %>%
   rename(pval = contains("pval"))
