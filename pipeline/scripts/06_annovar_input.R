@@ -1,14 +1,21 @@
 suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(data.table))
 
 args<-commandArgs(TRUE)
-chr <- args[1]
 
-snps <- read.csv(paste0("chr", chr, ".csv"))
+snps <- fread("all_chr_caf_annotated.csv", header=T, stringsAsFactors=F)
 snps <- as.tbl(snps)
-snps
 
 snps <- snps %>%
-  mutate(pos2 = pos, A1 = 0, A2 = 0) %>%
-  select(chr, pos, pos2, A1, A2, ID)
+  rename(pval = contains("pval"))
 
-write.table(snps, paste0("chr",chr,"_snps_input.txt"), quote = F, sep = "\t", row.names = F, col.names = F)
+snps <- snps[which(!is.na(snps$pval)),]
+snps <- snps[snps$pval<1,]
+
+fwrite(snps, "top_snps_caf_annotated.csv", quote = F, row.names = F)
+
+snps.annovar <- snps %>%
+  mutate(pos2 = pos, A1 = 0, A2 = 0) %>%
+  select(chr, pos, pos2, A1, A2, snpID)
+
+write.table(snps.annovar, "top_snps_input.txt", quote = F, sep = "\t", row.names = F, col.names = F)
