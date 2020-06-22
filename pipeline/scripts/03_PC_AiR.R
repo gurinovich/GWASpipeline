@@ -87,3 +87,7 @@ dev.off()
 png("PC3vsPC4.png")
 ggplot(pc.df, aes(PC3, PC4)) + geom_point()
 dev.off()
+
+fileConn<-file("pca_air.log")
+writeLines( paste0("number of individuals to include : ",length(analysis.sample.id)) , fileConn)
+close(fileConn)
