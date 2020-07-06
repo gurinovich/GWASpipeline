@@ -1,6 +1,4 @@
-suppressPackageStartupMessages(library(SeqArray))
-suppressPackageStartupMessages(library(reshape2))
-
+#!/usr/bin/env Rscript
 args = commandArgs(trailingOnly=TRUE)
 gds.file <- args[1]
 pheno.file <- args[2]
@@ -8,6 +6,12 @@ analysis.sample.id <- args[3]
 model <- args[4]
 phenotypes <- args[5]  
 out.file <- args[6]
+log.file <- args[7]
+
+sink(log.file, append=FALSE, split=TRUE)
+date()
+suppressPackageStartupMessages(library(SeqArray))
+suppressPackageStartupMessages(library(reshape2))
 
 ####Open GDS
 gds <- seqOpen(gds.file)
@@ -17,6 +21,8 @@ pheno.dat <- read.csv(pheno.file, stringsAsFactors=F, header=T)
 pheno.dat$sample.id <- as.character(pheno.dat[,1])
 analysis.sample.id <- readRDS(analysis.sample.id)
 pheno.dat <- pheno.dat[pheno.dat$sample.id%in%analysis.sample.id,]
+
+table(pheno.dat$group)
 
 if(sum(colnames(pheno.dat)%in%c("group"))==1){
 	group_names <- names(table(pheno.dat$group))
@@ -92,3 +98,5 @@ out <- cbind(out.caf.dosage, all.dat)
 
 write.csv(out, file = out.file, quote=FALSE, row.names=FALSE)
 
+date()
+sink()
