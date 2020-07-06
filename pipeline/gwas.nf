@@ -17,7 +17,7 @@ phenotypes: $params.phenotypes
 covars    : $params.covars
 model     : $params.model
 test      : $params.test
-ref       : $params.ref
+ref       : $params.ref_genome
 
 -
 """
@@ -46,7 +46,7 @@ process qc_miss {
 
   script:
   """
-  vcftools --gzvcf $PWD/${vcf} --max-missing 0.99 --recode --stdout | gzip -c > ${id}_qc1.vcf.gz
+  vcftools --gzvcf ${vcf} --max-missing 0.99 --recode --stdout | gzip -c > ${id}_qc1.vcf.gz
   """
 }
 
@@ -80,12 +80,12 @@ process vcf_to_gds {
 
   output:
   file '*' into gds_files1
-  file '*' into gds_files2
-  file '*' into gds_files3
+  file '*.gds' into gds_files2
+  file '*.gds' into gds_files3
 
   script:
   """
-  Rscript $PWD/scripts/02_vcf_to_gds.R chr_${x}_qc2.vcf.gz chr_${x}.gds
+  Rscript $PWD/scripts/02_vcf_to_gds.R chr_${x}_qc2.vcf.gz chr_${x}.gds vcf_to_gds_chr${x}.log
   """
 }
 process merge_gds {
@@ -95,7 +95,7 @@ process merge_gds {
   file '*' from gds_files1.collect()
 
   output:
-  file 'merged.gds' into gds_merged1
+  file '*' into gds_merged1
   file 'merged.gds' into gds_merged2
   file 'merged.gds' into gds_merged3
 
@@ -112,7 +112,7 @@ process pcair {
   publishDir "${params.outdir}/pcair", mode: 'copy'
       
   input:
-  file "merged.gds" from gds_merged1.collect()
+  file "*" from gds_merged1.collect()
 
   output:
   file '*' into pcair1
@@ -153,7 +153,7 @@ process nullmod {
   file '*' from pcrelate.collect()
 
   output:
-  file '*' into nullmod
+  file '*' into nullmod_gwas
 
   script:
   """
@@ -167,15 +167,15 @@ process gwas {
   input:
   each x from 1..22
   file '*' from gds_files2.collect()
-  file '*' from nullmod.collect()
-
+  file '*' from nullmod_gwas.collect()
+ 
   output:
   file '*' into gwas1
-  file '*' into gwas2
+  file '*.csv' into gwas2
 
   script:
   """
-  Rscript $PWD/scripts/04_GWAS.R chr_${x}.gds annot_pc.rds nullmod.rds ${params.test} chr_${x}.csv 
+  Rscript $PWD/scripts/04_GWAS.R chr_${x}.gds annot_pc.rds nullmod.rds ${params.test} chr_${x}.csv chr${x}_gwas.log
   """
 }
 
@@ -196,7 +196,7 @@ process caf_by_group {
 
   script:
   """
-  Rscript $PWD/scripts/05_caf_by_group.R chr_${x}.gds ${params.pheno} analysis.sample.id.rds ${params.model} ${params.phenotypes} chr_${x}_caf_by_group.csv
+  Rscript $PWD/scripts/05_caf_by_group.R chr_${x}.gds ${params.pheno} analysis.sample.id.rds ${params.model} ${params.phenotypes} chr_${x}_caf_by_group.csv chr${x}_caf_by_group.log
   """
 }
 
@@ -213,7 +213,7 @@ process merge_by_chr {
 
   script:
   """
-  Rscript $PWD/scripts/05_merge_by_chr.R chr_${x}.csv chr_${x}_caf_by_group.csv ${params.model} chr_${x}_caf_annotated.csv
+  Rscript $PWD/scripts/05_merge_by_chr.R chr_${x}.csv chr_${x}_caf_by_group.csv ${params.model} chr_${x}_caf_annotated.csv chr${x}_merge.log
   """
 }
 
@@ -229,7 +229,7 @@ process combine_results {
 
   script:
   """
-  Rscript $PWD/scripts/05_combine_results.R $PWD/results/merge_by_chr/
+  Rscript $PWD/scripts/05_combine_results.R ${params.outdir}/merge_by_chr/
   """
 }
 
@@ -275,7 +275,7 @@ process annovar_ref {
   
   script:
   """
-  annotate_variation.pl --downdb --buildver ${params.ref} --webfrom annovar refGene $PWD/results/humandb
+  annotate_variation.pl --downdb --buildver ${params.ref_genome} --webfrom annovar refGene $PWD/results/humandb
   """
 }
 
@@ -290,7 +290,7 @@ process annovar {
 
   script:
   """
-  table_annovar.pl -build ${params.ref} top_snps_input.txt $PWD/results/humandb/ -out top_annotation -remove -protocol refGene -operation g -nastring . -csvout
+  table_annovar.pl -build ${params.ref_genome} top_snps_input.txt $PWD/results/humandb/ -out top_annotation -remove -protocol refGene -operation g -nastring . -csvout
   """
 }
 
