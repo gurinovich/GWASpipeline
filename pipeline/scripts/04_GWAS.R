@@ -1,16 +1,20 @@
-suppressPackageStartupMessages(library(SeqArray))
-suppressPackageStartupMessages(library(GENESIS))
-suppressPackageStartupMessages(library(Biobase))
-suppressPackageStartupMessages(library(SeqVarTools))
-suppressPackageStartupMessages(library(dplyr))
-suppressPackageStartupMessages(library(data.table))
-
+#!/usr/bin/env Rscript
 args = commandArgs(trailingOnly=TRUE)
 gds.file <- args[1]
 annot <- args[2]
 nullmod <- args[3]
 test <- args[4]
 result.file <- args[5]
+log.file <- args[6]
+
+sink(log.file, append=FALSE, split=TRUE)
+date()
+suppressPackageStartupMessages(library(SeqArray))
+suppressPackageStartupMessages(library(GENESIS))
+suppressPackageStartupMessages(library(Biobase))
+suppressPackageStartupMessages(library(SeqVarTools))
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(data.table))
 
 ####Open GDS
 gds <- seqOpen(gds.file)
@@ -27,8 +31,14 @@ nullmod <- readRDS(nullmod)
 
 ####GWAS
 iterator <- SeqVarBlockIterator(seqData, verbose=FALSE)
-assoc <- assocTestSingle(iterator, nullmod, test=test, imputed=T, verbose=FALSE)
+
+cat("\n####assocTestSingle starts\n")
+assoc <- assocTestSingle(iterator, nullmod, test=test, imputed=T, verbose=T)
+cat("####assocTestSingle ends\n\n")
+
 assoc <- left_join(assoc, snps, by="variant.id")
 
 fwrite(assoc, file = result.file, quote=FALSE, row.names=FALSE)
 
+date()
+sink()
