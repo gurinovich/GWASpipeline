@@ -1,12 +1,4 @@
-suppressPackageStartupMessages(library(SeqArray))
-suppressPackageStartupMessages(library(GENESIS))
-suppressPackageStartupMessages(library(Biobase))
-suppressPackageStartupMessages(library(SeqVarTools))
-suppressPackageStartupMessages(library(dplyr))
-suppressPackageStartupMessages(library(SNPRelate))
-suppressPackageStartupMessages(library(ggplot2))
-suppressPackageStartupMessages(library(data.table))
-
+#!/usr/bin/env Rscript
 args = commandArgs(trailingOnly=TRUE)
 gds.file <- args[1]
 phenotypes <- args[2]
@@ -16,6 +8,17 @@ analysis.sample.id <- args[5]
 annot <- args[6]
 pc_df <- args[7]
 grm <- args[8]
+
+sink("nullmod.log", append=FALSE, split=TRUE)
+date()
+suppressPackageStartupMessages(library(SeqArray))
+suppressPackageStartupMessages(library(GENESIS))
+suppressPackageStartupMessages(library(Biobase))
+suppressPackageStartupMessages(library(SeqVarTools))
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(SNPRelate))
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(data.table))
 
 ####Open GDS
 gds <- seqOpen(gds.file)
@@ -43,10 +46,15 @@ if(model=="linear"){
 if(model=="logistic"){
 	model.switch <- "binomial"
 }
+
+cat("\n####fitNullModel starts\n")
 nullmod <- fitNullModel(seqData, outcome=phenotypes, 
                         covars=covariates,
                         cov.mat=grm,
                         family=model.switch, verbose=T)
+cat("####fitNullModel ends\n\n")
 
 saveRDS(nullmod,"nullmod.rds")
 
+date()
+sink()
