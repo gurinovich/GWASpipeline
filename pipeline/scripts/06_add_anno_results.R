@@ -1,7 +1,10 @@
+#!/usr/bin/env Rscript
+args = commandArgs(trailingOnly=TRUE)
+
+sink('add_anno_results.log', append=FALSE, split=TRUE)
+date()
 suppressPackageStartupMessages(library(dplyr))
 suppressPackageStartupMessages(library(data.table))
-
-args = commandArgs(trailingOnly=TRUE)
 
 results <- fread("top_snps_caf_annotated.csv", header=T, stringsAsFactors=F)
 annovar <- fread("top_annotation.hg19_multianno.csv", header=T, stringsAsFactors=F)
@@ -15,3 +18,6 @@ annot.results <- annot.results %>%
 	select ("snpID", "chr", "pos", "REF", "ALT", contains("Score"), contains("Wald"), "pval", "n.obs", contains("n.case"), contains("n.control"), contains("caf"), contains("dosage"), contains("refGene"))
 
 fwrite(annot.results, paste0("top_snps_annotation.csv"), row.names = FALSE)
+
+date()
+sink()
