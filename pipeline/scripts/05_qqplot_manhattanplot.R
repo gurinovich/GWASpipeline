@@ -20,10 +20,11 @@ dat <- dat %>%
   rename(pval = contains("pval"))
 dat <- dat[which(!is.na(dat$pval)),]
 
-colnames(dat)[colnames(dat)=="Wald"] <- "beta"
+colnames(dat)[colnames(dat)=="Est"] <- "beta"
 colnames(dat)[colnames(dat)=="Score"] <- "beta"
-colnames(dat)[colnames(dat)=="Wald.SE"] <- "se"
+colnames(dat)[colnames(dat)=="Est.SE"] <- "se"
 colnames(dat)[colnames(dat)=="Score.SE"] <- "se"
+colnames(dat)[colnames(dat)=="AF"] <- "freq"
 
 ####qqplot
 lambda_GC <- median((dat$beta/dat$se)^2)/qchisq(0.5,1)
