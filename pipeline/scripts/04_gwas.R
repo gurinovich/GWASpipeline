@@ -37,6 +37,7 @@ assoc <- assocTestSingle(iterator, nullmod, test=test, imputed=T, verbose=T)
 cat("####assocTestSingle ends\n\n")
 
 assoc <- left_join(assoc, snps, by="variant.id")
+colnames(assoc)[colnames(assoc)=="n.obs"] <- "N"
 
 fwrite(assoc, file = result.file, quote=FALSE, row.names=FALSE)
 
