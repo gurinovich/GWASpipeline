@@ -17,7 +17,7 @@ caf.dat <- fread(caf.file, stringsAsFactors = F, header = T)
 combine.dat <- left_join(result.dat, caf.dat, by=c("chr","pos"))
 print(paste0("total variants analyzed : ", dim(combine.dat)[1]))
 maf <- ifelse(combine.dat$caf>0.5, 1-combine.dat$caf, combine.dat$caf)
-out.dat <- combine.dat[maf*2*combine.dat$n.obs>0.99,]
+out.dat <- combine.dat[maf*2*combine.dat$N>0.99,]
 print(paste0("variants with at least 1 copy : ", dim(out.dat)[1]))
 
 if (model == "logistic") {
