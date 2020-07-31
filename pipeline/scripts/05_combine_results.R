@@ -12,12 +12,12 @@ res <- fread(paste0(path1, "chr_", chr, "_caf_annotated.csv"))
 result <- res
 
 #chr <- 2
-for (chr in 2:22) {
+for (chr in 2:15) {
   res <- fread(paste0(path1, "chr_", chr, "_caf_annotated.csv"))
   result <- bind_rows(result, res)
 }
 
-fwrite(result, paste0("all_chr_caf_annotated.csv"), row.names = FALSE)
+fwrite(result, paste0("all_chr_caf_annotated.csv"), row.names = FALSE, quote=F)
 
 date()
 sink()
