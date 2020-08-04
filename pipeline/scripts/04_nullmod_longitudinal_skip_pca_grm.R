@@ -6,6 +6,7 @@ phenotypes <- args[3]
 covariates <- unlist(strsplit(args[4], ","))
 model <- args[5]
 grm <- args[6]
+slope <- args[7]
 
 sink("nullmod_longitudinal.log", append=FALSE, split=TRUE)
 date()
@@ -63,16 +64,30 @@ if(!is.null(covariates)){
 fix.eff=formula(fix.eff)
 
 if(grm=="null"){
-	cat("\n####glmmkin starts\n")
-	nullmod <- glmmkin(fix.eff, data=model.dat, kins=NULL, 
+	if(slope=="null"){
+		cat("\n####glmmkin starts\n")
+		nullmod <- glmmkin(fix.eff, data=model.dat, kins=NULL, 
 	        		   id="sample.id", family = model.switch)
-	cat("####glmmkin ends\n\n")
+		cat("####glmmkin ends\n\n")
+	}else{
+		cat("\n####glmmkin starts\n")
+		nullmod <- glmmkin(fix.eff, data=model.dat, kins=NULL, 
+		           random.slope=slope, id="sample.id", family = model.switch)
+		cat("####glmmkin ends\n\n")
+	}	
 }else{
 	grm <- readRDS(grm)
-	cat("\n####glmmkin starts\n")
-	nullmod <- glmmkin(fix.eff, data=model.dat, kins=as.matrix(grm), 
+		if(slope=="null"){
+		cat("\n####glmmkin starts\n")
+		nullmod <- glmmkin(fix.eff, data=model.dat, kins=as.matrix(grm), 
 	        		   id="sample.id", family = model.switch)
-	cat("####glmmkin ends\n\n")
+		cat("####glmmkin ends\n\n")
+	}else{
+		cat("\n####glmmkin starts\n")
+		nullmod <- glmmkin(fix.eff, data=model.dat, kins=as.matrix(grm), 
+		           random.slope=slope, id="sample.id", family = model.switch)
+		cat("####glmmkin ends\n\n")
+	}
 }
 
 saveRDS(nullmod,"nullmod_longitudinal.rds")
