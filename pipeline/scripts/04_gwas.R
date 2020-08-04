@@ -4,8 +4,9 @@ gds.file <- args[1]
 annot <- args[2]
 nullmod <- args[3]
 test <- args[4]
-result.file <- args[5]
-log.file <- args[6]
+imputed <- args[5]
+result.file <- args[6]
+log.file <- args[7]
 
 sink(log.file, append=FALSE, split=TRUE)
 date()
@@ -33,7 +34,7 @@ nullmod <- readRDS(nullmod)
 iterator <- SeqVarBlockIterator(seqData, verbose=FALSE)
 
 cat("\n####assocTestSingle starts\n")
-assoc <- assocTestSingle(iterator, nullmod, test=test, imputed=T, verbose=T)
+assoc <- assocTestSingle(iterator, nullmod, test=test, imputed=ifelse(imputed=="true",T,F), verbose=T)
 cat("####assocTestSingle ends\n\n")
 
 assoc <- left_join(assoc, snps, by="variant.id")
