@@ -4,9 +4,10 @@ gds.file <- args[1]
 pheno.file <- args[2]
 analysis.sample.id <- args[3]
 model <- args[4]
-phenotypes <- args[5]  
-out.file <- args[6]
-log.file <- args[7]
+phenotypes <- args[5]
+group <- args[6]  
+out.file <- args[7]
+log.file <- args[8]
 
 sink(log.file, append=FALSE, split=TRUE)
 date()
@@ -22,14 +23,13 @@ pheno.dat$sample.id <- as.character(pheno.dat[,1])
 analysis.sample.id <- readRDS(analysis.sample.id)
 pheno.dat <- pheno.dat[pheno.dat$sample.id%in%analysis.sample.id,]
 
-table(pheno.dat$group)
-
-if(sum(colnames(pheno.dat)%in%c("group"))==1){
-	group_names <- names(table(pheno.dat$group))
+if(sum(colnames(pheno.dat)%in%c(group))==1){
+	table(pheno.dat[,group])
+	group_names <- names(table(pheno.dat[,group]))
 	out.caf <- c()
 	out.dosage <- c()
 	for(i in 1:length(group_names)){
-		group.id <- pheno.dat[pheno.dat$group==group_names[i],]$sample.id
+		group.id <- pheno.dat[pheno.dat[,group]==group_names[i],]$sample.id
 		seqSetFilter(gds, sample.id = group.id)
 		genotype.dat <- seqGetData(gds, "genotype")
 		genotype <- genotype.dat[1,,]+genotype.dat[2,,]
