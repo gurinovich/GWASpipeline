@@ -52,7 +52,7 @@ seqData <- SeqVarData(gds, sampleData=annot)
 ####LD pruning to get variant set
 snp.dat <- data.frame(variant.id = seqGetData(gds, "variant.id"), chr = seqGetData(gds, "chromosome"), pos = seqGetData(gds, "position"))
 snp.dat$chr_pos <- paste0(snp.dat$chr, ":", snp.dat$pos)
-if(is.na(snpset.file)){
+if(snpset.file=="null"){
   snpset <- snpgdsLDpruning(gds, method="corr", slide.max.bp=10e7, ld.threshold=sqrt(0.1))
   pruned <- unlist(snpset, use.names=FALSE)
   saveRDS(pruned, "pruned.rds")
@@ -77,8 +77,8 @@ cat("####snpgdsIBDKING ends\n\n")
 
 ####PC-AiR
 cat("\n####pcair starts\n")
-pcs <- pcair(seqData, kinobj=kingMat, kin.thresh=2^(-11/2),
-                      divobj=kingMat, div.thresh=-2^(-11/2),
+pcs <- pcair(seqData, kinobj=kingMat, kin.thresh=2^(-9/2),
+                      divobj=kingMat, div.thresh=-2^(-9/2),
              sample.include=analysis.sample.id,
              snp.include=pruned,
              verbose=T)
