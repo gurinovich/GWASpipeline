@@ -8,24 +8,33 @@ date = new Date().format( 'yyyyMMdd' )
 
 params.vcf_list    = null
 params.pheno       = null
-params.snpset      = null
 
 params.phenotypes  = null
 params.covars      = null
-params.ref_genome  = "hg19"
 
-pca_grm            = true
+params.pca_grm     = false
+params.snpset      = null
+params.grm         = null
 
 params.gwas        = false
 params.model       = "linear"
 params.test        = "Score"
+params.imputed     = false
 
 params.gene_based  = false
 params.max_maf     = 0.01
 params.method      = "Burden"
 
-params.logitudinal = false
-params.model_l     = null
+params.longitudinal = false
+params.model_l      = null
+params.random_slope = null
+
+params.group               = "null"
+params.min_maf             = 0.1
+params.max_pval_manhattan  = 1
+
+params.max_pval    = 1
+params.ref_genome  = "hg19"
 
 params.help        = null
 
@@ -108,18 +117,25 @@ Channel
 /*
 ** STEP 0 Configuration Check
 */
-if(params.gwas&params.gene_based&params.longitudinal){
+if(!(params.pca_grm|params.gwas|params.gene_based|params.longitudinal)){
   log.info """
-  ERROR: NO ANALYSIS SELECTED
+  EXIT: NO ANALYSIS SELECTED
   """
   exit 1
 }
+if(params.gwas&params.gene_based|params.gwas&params.longitudinal|params.gene_based&params.longitudinal|params.gwas&params.gene_based&params.longitudinal){
+  log.info """
+  EXIT: MORE THAN ONE ANLYSES SELECTED
+  """
+  exit 1
+}
+
 
 /*
 ** STEP 1 QC
 */
 process qc_miss {
-  publishDir "${params.outdir}/qc1", mode: 'copy'
+  publishDir "${params.outdir}/QC/qc_miss", mode: 'copy'
   tag "$id"
   
   input:
@@ -135,7 +151,7 @@ process qc_miss {
 }
 
 process qc_mono {
-  publishDir "${params.outdir}/qc2", mode: 'copy'
+  publishDir "${params.outdir}/QC/qc_mono", mode: 'copy'
   
   input:
   each x from 1..22
@@ -156,7 +172,7 @@ process qc_mono {
 ** STEP 2 vcf_to_gds
 */
 process vcf_to_gds {
-  publishDir "${params.outdir}/gds_files", mode: 'copy'
+  publishDir "${params.outdir}/GDS/gds_files", mode: 'copy'
     
   input:
   each x from 1..22
@@ -174,7 +190,7 @@ process vcf_to_gds {
 }
 
 process merge_gds {
-  publishDir "${params.outdir}/gds_merged", mode: 'copy'
+  publishDir "${params.outdir}/GDS/gds_merged", mode: 'copy'
 
   input:
   file '*' from gds_files1.collect()
@@ -195,7 +211,7 @@ process merge_gds {
 */
 if(params.pca_grm){
   process pcair {
-  publishDir "${params.outdir}/pcair", mode: 'copy'
+  publishDir "${params.outdir}/PCA_GRM/pcair", mode: 'copy'
       
   input:
   file "*" from gds_merged1.collect()
@@ -212,7 +228,7 @@ if(params.pca_grm){
 }
 
 process pcrelate {
-  publishDir "${params.outdir}/pcrelate", mode: 'copy'
+  publishDir "${params.outdir}/PCA_GRM/pcrelate", mode: 'copy'
   
   input:
   file "merged.gds" from gds_merged2.collect()
@@ -233,7 +249,7 @@ process pcrelate {
 */
 if((params.gwas|params.gene_based)&params.pca_grm){
   process nullmod {
-    publishDir "${params.outdir}/nullmod", mode: 'copy'
+    publishDir "${params.outdir}/Association_Test/nullmod", mode: 'copy'
   
     input:
     file "merged.gds" from gds_merged3.collect()
@@ -252,7 +268,7 @@ if((params.gwas|params.gene_based)&params.pca_grm){
 
 if((params.gwas|params.gene_based)&!params.pca_grm){
   process nullmod_skip_pca {
-    publishDir "${params.outdir}/nullmod", mode: 'copy'
+    publishDir "${params.outdir}/Association_Test/nullmod", mode: 'copy'
   
     input:
     file "merged.gds" from gds_merged3.collect()
@@ -270,7 +286,7 @@ if((params.gwas|params.gene_based)&!params.pca_grm){
 
 if(params.gwas&params.pca_grm){
   process gwas {
-    publishDir "${params.outdir}/gwas", mode: 'copy'
+    publishDir "${params.outdir}/Association_Test/gwas", mode: 'copy'
     
     input:
     each x from 1..22
@@ -283,14 +299,14 @@ if(params.gwas&params.pca_grm){
 
     script:
     """
-    Rscript $PWD/scripts/04_gwas.R chr_${x}.gds annot_pc.rds nullmod.rds ${params.test} chr_${x}.csv chr${x}_gwas.log
+    Rscript $PWD/scripts/04_gwas.R chr_${x}.gds annot_pc.rds nullmod.rds ${params.test} ${params.imputed} chr_${x}.csv chr${x}_gwas.log
     """
   }
 }
 
 if(params.gwas&!params.pca_grm){ 
   process gwas_skip_pca_grm {
-    publishDir "${params.outdir}/gwas", mode: 'copy'
+    publishDir "${params.outdir}/Association_Test/gwas", mode: 'copy'
     
     input:
     each x from 1..22
@@ -303,14 +319,14 @@ if(params.gwas&!params.pca_grm){
 
     script:
     """
-    Rscript $PWD/scripts/04_gwas.R chr_${x}.gds annot.rds nullmod.rds ${params.test} chr_${x}.csv chr${x}_gwas.log
+    Rscript $PWD/scripts/04_gwas.R chr_${x}.gds annot.rds nullmod.rds ${params.test} ${params.imputed} chr_${x}.csv chr${x}_gwas.log
     """
   }
 }
 
 if(params.gene_based&params.pca_grm){
   process gene_based {
-    publishDir "${params.outdir}/gene_based", mode: 'copy'
+    publishDir "${params.outdir}/Association_Test/gene_based", mode: 'copy'
     
     input:
     each x from 1..22
@@ -329,7 +345,7 @@ if(params.gene_based&params.pca_grm){
 
 if(params.gene_based&!params.pca_grm){
   process gene_based_skip_pca_grm {
-    publishDir "${params.outdir}/gene_based", mode: 'copy'
+    publishDir "${params.outdir}/Association_Test/gene_based", mode: 'copy'
     
     input:
     each x from 1..22
@@ -349,7 +365,7 @@ if(params.gene_based&!params.pca_grm){
 
 if(params.longitudinal&params.pca_grm){
   process nullmod_longitudinal {
-    publishDir "${params.outdir}/nullmod_longitudinal", mode: 'copy'
+    publishDir "${params.outdir}/Association_Test/nullmod_longitudinal", mode: 'copy'
   
     input:
     file '*' from pcair2.collect()
@@ -360,14 +376,14 @@ if(params.longitudinal&params.pca_grm){
 
     script:
     """
-    Rscript $PWD/scripts/04_nullmod_longitudinal.R ${params.phenotypes} ${params.covars} ${params.model} analysis.sample.id.rds pc.df.rds grm.rds
+    Rscript $PWD/scripts/04_nullmod_longitudinal.R ${params.phenotypes} ${params.covars} ${params.model} analysis.sample.id.rds pc.df.rds grm.rds ${params.random_slope}
     """
   }
 }
 
 if(params.longitudinal&!params.pca_grm){
   process nullmod_longitudinal_skip_pca_grm {
-    publishDir "${params.outdir}/nullmod_longitudinal", mode: 'copy'
+    publishDir "${params.outdir}/Association_Test/nullmod_longitudinal", mode: 'copy'
   
     input:
     file "merged.gds" from gds_merged3.collect()
@@ -378,14 +394,14 @@ if(params.longitudinal&!params.pca_grm){
 
     script:
     """
-    Rscript $PWD/scripts/04_nullmod_longitudinal_skip_pca_grm.R merged.gds ${params.pheno} ${params.phenotypes} ${params.covars} ${params.model} ${params.grm}
+    Rscript $PWD/scripts/04_nullmod_longitudinal_skip_pca_grm.R merged.gds ${params.pheno} ${params.phenotypes} ${params.covars} ${params.model} ${params.grm} ${params.random_slope}
     """
   }
 }
 
 if(params.longitudinal){
   process gwas_longitudinal {
-    publishDir "${params.outdir}/gwas_longitudinal", mode: 'copy'
+    publishDir "${params.outdir}/Association_Test/gwla", mode: 'copy'
     
     input:
     each x from 1..22
@@ -408,7 +424,7 @@ if(params.longitudinal){
 
 if(params.gene_based){
   process combine_results_gene {
-    publishDir "${params.outdir}/combined_results", mode: 'copy'
+    publishDir "${params.outdir}/Summary_Plot/combined_results", mode: 'copy'
   
     input:
     file '*' from gene_based.collect()
@@ -418,12 +434,12 @@ if(params.gene_based){
 
     script:
     """
-    Rscript $PWD/scripts/05_combine_results_gene.R ${params.outdir}/gene_based/
+    Rscript $PWD/scripts/05_combine_results_gene.R ${params.outdir}/Association_Test/gene_based/
     """
   }
 
   process plot_gene {
-    publishDir "${params.outdir}/qq_plot", mode: 'copy'
+    publishDir "${params.outdir}/Summary_Plot/qq_plot", mode: 'copy'
   
     input:
     file '*' from combined_results.collect()
@@ -441,7 +457,7 @@ if(params.gene_based){
 
 if((params.gwas|params.longitudinal)&params.pca_grm){
  process caf_by_group {
-  publishDir "${params.outdir}/caf_by_group", mode: 'copy'
+  publishDir "${params.outdir}/Summary_Plot/caf_by_group", mode: 'copy'
   
   input:
   each x from 1..22
@@ -453,14 +469,14 @@ if((params.gwas|params.longitudinal)&params.pca_grm){
 
   script:
   """
-  Rscript $PWD/scripts/05_caf_by_group.R chr_${x}.gds ${params.pheno} analysis.sample.id.rds ${params.model} ${params.phenotypes} chr_${x}_caf_by_group.csv chr${x}_caf_by_group.log
+  Rscript $PWD/scripts/05_caf_by_group.R chr_${x}.gds ${params.pheno} analysis.sample.id.rds ${params.model} ${params.phenotypes} ${params.group} chr_${x}_caf_by_group.csv chr${x}_caf_by_group.log
   """
  }
 }
 
 if((params.gwas|params.longitudinal)&!params.pca_grm){
  process caf_by_group_skip_pca_grm {
-  publishDir "${params.outdir}/caf_by_group", mode: 'copy'
+  publishDir "${params.outdir}/Summary_Plot/caf_by_group", mode: 'copy'
   
   input:
   each x from 1..22
@@ -472,14 +488,14 @@ if((params.gwas|params.longitudinal)&!params.pca_grm){
 
   script:
   """
-  Rscript $PWD/scripts/05_caf_by_group.R chr_${x}.gds ${params.pheno} analysis.sample.id.rds ${params.model} ${params.phenotypes} chr_${x}_caf_by_group.csv chr${x}_caf_by_group.log
+  Rscript $PWD/scripts/05_caf_by_group.R chr_${x}.gds ${params.pheno} analysis.sample.id.rds ${params.model} ${params.phenotypes} ${params.group} chr_${x}_caf_by_group.csv chr${x}_caf_by_group.log
   """
  }
 }
 
 if(params.longitudinal){
   process coincide_gwas {
-    publishDir "${params.outdir}/gwas_longitudinal", mode: 'copy'
+    publishDir "${params.outdir}/Summary_Plot/gwla", mode: 'copy'
   
     input:
     each x from 1..22
@@ -497,7 +513,7 @@ if(params.longitudinal){
 
 if(params.gwas){
   process merge_by_chr {
-    publishDir "${params.outdir}/merge_by_chr", mode: 'copy'
+    publishDir "${params.outdir}/Summary_Plot/merge_by_chr", mode: 'copy'
   
     input:
     each x from 1..22
@@ -516,7 +532,7 @@ if(params.gwas){
 
 if(params.longitudinal){
   process merge_by_chr_longitudinal {
-    publishDir "${params.outdir}/merge_by_chr", mode: 'copy'
+    publishDir "${params.outdir}/Summary_Plot/merge_by_chr", mode: 'copy'
   
     input:
     each x from 1..22
@@ -535,7 +551,7 @@ if(params.longitudinal){
 
 if(params.gwas|params.longitudinal){
 process combine_results {
-  publishDir "${params.outdir}/combined_results", mode: 'copy'
+  publishDir "${params.outdir}/Summary_Plot/combined_results", mode: 'copy'
   
   input:
   file '*' from merge_by_chr.collect()
@@ -546,12 +562,12 @@ process combine_results {
 
   script:
   """
-  Rscript $PWD/scripts/05_combine_results.R ${params.outdir}/merge_by_chr/
+  Rscript $PWD/scripts/05_combine_results.R ${params.outdir}/Summary_Plot/merge_by_chr/
   """
 }
 
 process plot {
-  publishDir "${params.outdir}/qq_manhattan", mode: 'copy'
+  publishDir "${params.outdir}/Summary_Plot/qq_manhattan", mode: 'copy'
   
   input:
   file '*' from combined_results1.collect()
@@ -561,7 +577,7 @@ process plot {
 
   script:
   """
-  Rscript $PWD/scripts/05_qqplot_manhattanplot.R all_chr_caf_annotated.csv
+  Rscript $PWD/scripts/05_qqplot_manhattanplot.R all_chr_caf_annotated.csv ${params.min_maf} ${params.max_pval_manhattan}
   """
 }
 
@@ -570,7 +586,7 @@ process plot {
 */
 
 process annovar_input {
-  publishDir "${params.outdir}/annovar_input", mode: 'copy'
+  publishDir "${params.outdir}/Annotation/annovar_input", mode: 'copy'
     
   input:
   file '*' from combined_results2.collect()
@@ -581,20 +597,22 @@ process annovar_input {
 
   script:
   """
-  Rscript $PWD/scripts/06_annovar_input.R
+  Rscript $PWD/scripts/06_annovar_input.R ${params.max_pval}
   """
 }
 
 process annovar_ref {  
-
+  publishDir "${params.outdir}/Annotation/", mode: 'copy'
+  
   script:
   """
-  annotate_variation.pl --downdb --buildver ${params.ref_genome} --webfrom annovar refGene ${params.outdir}/humandb
+  mkdir ${params.outdir}/Annotation
+  annotate_variation.pl --downdb --buildver ${params.ref_genome} --webfrom annovar refGene ${params.outdir}/Annotation/humandb
   """
 }
 
 process annovar {
-  publishDir "${params.outdir}/annovar", mode: 'copy'
+  publishDir "${params.outdir}/Annotation/annovar", mode: 'copy'
     
   input:
   file '*' from annovar_input1.collect()
@@ -604,12 +622,12 @@ process annovar {
 
   script:
   """
-  table_annovar.pl -build ${params.ref_genome} top_snps_input.txt ${params.outdir}/humandb/ -out top_annotation -remove -protocol refGene -operation g -nastring . -csvout
+  table_annovar.pl -build ${params.ref_genome} top_snps_input.txt ${params.outdir}/Annotation/humandb/ -out top_annotation -remove -protocol refGene -operation g -nastring . -csvout
   """
 }
 
 process add_annovar {
-  publishDir "${params.outdir}/annotated_results", mode: 'copy'
+  publishDir "${params.outdir}/Annotation/annotated_results", mode: 'copy'
   
   input:
   file '*' from annovar_input2.collect()
@@ -620,7 +638,7 @@ process add_annovar {
 
   script:
   """
-  Rscript $PWD/scripts/06_add_anno_results.R
+  Rscript $PWD/scripts/06_add_anno_results.R ${params.ref_genome}
   """
 }
 }
