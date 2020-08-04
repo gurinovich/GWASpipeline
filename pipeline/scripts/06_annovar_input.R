@@ -1,5 +1,6 @@
 #!/usr/bin/env Rscript
 args<-commandArgs(TRUE)
+max.pval <- args[1]
 
 sink('annovar_input.log', append=FALSE, split=TRUE)
 date()
@@ -13,7 +14,7 @@ snps <- snps %>%
   rename(pval = contains("pval"))
 
 snps <- snps[which(!is.na(snps$pval)),]
-snps <- snps[snps$pval<1,]
+snps <- snps[snps$pval<max.pval,]
 print(paste0("number of variants to be annotated : ",dim(snps)[1]))
 
 fwrite(snps, "top_snps_caf_annotated.csv", quote = F, row.names = F)
