@@ -6,6 +6,7 @@ model <- args[3]
 analysis.sample.id <- args[4]
 pc_df <- args[5]
 grm <- args[6]
+slope <- args[7]
 
 sink("nullmod_longitudinal.log", append=FALSE, split=TRUE)
 date()
@@ -36,9 +37,19 @@ if(!is.null(covariates)){
 }
 fix.eff=formula(fix.eff)
 
-cat("\n####glmmkin starts\n")
-nullmod <- glmmkin(fix.eff, data=pc.df, kins=as.matrix(grm), id="sample.id", family = model.switch)
-cat("####glmmkin ends\n\n")
+if(slope=="null"){
+	cat("\n####glmmkin starts\n")
+	nullmod <- glmmkin(fix.eff, data=pc.df, kins=as.matrix(grm),
+	           random.slope=NULL, id="sample.id", family = model.switch)
+	cat("####glmmkin ends\n\n")
+
+}else{
+	cat("\n####glmmkin starts\n")
+	nullmod <- glmmkin(fix.eff, data=pc.df, kins=as.matrix(grm), 
+	           random.slope=slope, id="sample.id", family = model.switch)
+	cat("####glmmkin ends\n\n")
+
+}
 
 saveRDS(nullmod,"nullmod_longitudinal.rds")
 
