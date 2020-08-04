@@ -1,5 +1,6 @@
 #!/usr/bin/env Rscript
 args = commandArgs(trailingOnly=TRUE)
+ref <- args[1]
 
 sink('add_anno_results.log', append=FALSE, split=TRUE)
 date()
@@ -7,7 +8,7 @@ suppressPackageStartupMessages(library(dplyr))
 suppressPackageStartupMessages(library(data.table))
 
 results <- fread("top_snps_caf_annotated.csv", header=T, stringsAsFactors=F)
-annovar <- fread("top_annotation.hg19_multianno.csv", header=T, stringsAsFactors=F)
+annovar <- fread(paste0("top_annotation.",ref,"_multianno.csv"), header=T, stringsAsFactors=F)
 
 annovar$chr <- annovar$Chr
 annovar$pos <- annovar$Start
