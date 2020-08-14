@@ -1,24 +1,3 @@
-### Conda Envrionment
-```bash
-
-conda create -n gwas python=2.7
-source activate gwas
-conda list
-
-# Installs popular R packages
-conda install r-essentials r-base
-
-# R packages not included in essentials
-conda config --add channels bioconda
-conda install -c bioconda/label/gcc7 bioconductor-seqarray
-
-conda install -c bioconda vcftools
-conda install -c bioconda bcftools
-conda install -c bioconda plink
-conda install -c bioconda annovar
-
-```
-
 ### Clone Repository
 ```bash
 
@@ -40,7 +19,7 @@ $ curl -s https://get.nextflow.io | bash
 
 ```
 
-### Locally Run Example Data
+### Locally Run Example Data [Centos7]
 ```bash
 $ module load R/3.6.0
 $ module load vcftools
@@ -49,10 +28,16 @@ $ module load plink/2.00a1LM
 $ module load annovar/2018apr
 $ mkdir results
 
-modify paths and parameters in gwas.config file
+# Modify paths and parameters in gwas.config file
 
 $ nextflow gwas.nf -c gwas.config
+```
 
+### Run with docker
+```
+$ docker pull montilab/gwas:latest
+
+$ nextflow gwas.nf -c gwas.config -with-docker montilab/gwas
 ```
 
 ### Expected Output
