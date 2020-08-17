@@ -24,9 +24,8 @@ $ curl -s https://get.nextflow.io | bash
 $ module load R/3.6.0
 $ module load vcftools
 $ module load bcftools
-$ module load plink/2.00a1LM
 $ module load annovar/2018apr
-$ mkdir results
+$ module load pandoc
 
 # Modify paths and parameters in gwas.config file
 
