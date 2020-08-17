@@ -1,0 +1,65 @@
+---
+title: "GWAS pipeline Report"
+---
+
+```{r include=FALSE}
+#!/usr/bin/env Rscript
+args<-commandArgs(TRUE)
+png.pc1 <- args[1]
+png.pc2 <- args[2]
+png.kinship <- args[3]
+png.qq1 <- args[4]
+png.qq2 <- args[5]
+png.manhattan1 <- args[6]
+png.manhattan2 <- args[7]
+result <- args[8]
+```
+
+```{r include=FALSE}
+suppressPackageStartupMessages(library(data.table))
+suppressPackageStartupMessages(library(EBImage))
+```
+
+##QC
+The number of SNPs included in the gds file for each chromosome and total:
+```{r include=FALSE}
+
+```
+`r ###`
+
+##PCA plot
+```{r include=FALSE}
+pc1 <- readImage(png.pc1)
+pc2 <- readImage(png.pc2)
+par(mfrow=c(1,2))
+display(pc1)
+display(pc2)
+```
+
+##Kinship plot
+```{r include=FALSE}
+kinship <- readImage(png.kinship)
+display(kinship)
+```
+
+##QQ and Manhattan plot for all SNPs passed filter
+```{r include=FALSE}
+try(qq1 <- readImage(png.qq1))
+try(display(qq1))
+try(manhattan1 <- readImage(png.manhattan1))
+try(display(manhattan1))
+```
+
+##QQ and Manhattan plot for SNPs passed filter and MAF threshold
+```{r include=FALSE}
+try(qq2 <- readImage(png.qq2))
+try(display(qq2))
+try(manhattan2 <- readImage(png.manhattan2))
+try(display(manhattan2))
+```
+
+##Annotated top results
+```{r include=FALSE}
+annotated.results <- fread(result, header=T, stringsAsFactors=F)
+annotated.results
+```

@@ -1,0 +1,37 @@
+```{r}
+#!/usr/bin/env Rscript
+args<-commandArgs(TRUE)
+png.qq1 <- args[1]
+png.qq2 <- args[2]
+png.manhattan1 <- args[3]
+png.manhattan2 <- args[4]
+result <- args[5]
+```
+
+```{r}
+date()
+suppressPackageStartupMessages(library(data.table))
+suppressPackageStartupMessages(library(EBImage))
+```
+
+##QQ and Manhattan plot for all SNPs passed filter
+```{r}
+try(qq1 <- readImage(png.qq1))
+try(display(qq1))
+try(manhattan1 <- readImage(png.manhattan1))
+try(display(manhattan1))
+```
+
+##QQ and Manhattan plot for SNPs passed filter and MAF threshold
+```{r}
+try(qq2 <- readImage(png.qq2))
+try(display(qq2))
+try(manhattan2 <- readImage(png.manhattan2))
+try(display(manhattan2))
+```
+
+##Annotated top results
+```{r}
+annotated.results <- fread(result, header=T, stringsAsFactors=F)
+annotated.results
+```
