@@ -64,7 +64,7 @@ The command for runing the pipeline is:
  for longitudinal analysis:
 
 Mandatory arguments:
---vcf_list                 String        Name of the two column csv mapping file: id , file_path 
+--vcf_list                 String        Name of the two-column csv mapping file: id , file_path 
 --pheno                    String        Name of the phenotype file
 --phenotype                String        Name of the phenotype column
 
@@ -267,7 +267,7 @@ if((params.gwas|params.gene_based)&params.pca_grm){
 }
 
 if((params.gwas|params.gene_based)&!params.pca_grm){
-  process nullmod_skip_pca {
+  process nullmod_skip_pca_grm {
     publishDir "${params.outdir}/Association_Test/nullmod", mode: 'copy'
   
     input:
@@ -606,7 +606,7 @@ process annovar_ref {
   
   script:
   """
-  mkdir ${params.outdir}/Annotation
+  mkdir -p ${params.outdir}/Annotation
   annotate_variation.pl --downdb --buildver ${params.ref_genome} --webfrom annovar refGene ${params.outdir}/Annotation/humandb
   """
 }
@@ -634,11 +634,87 @@ process add_annovar {
   file '*' from annovar.collect()
 
   output:
-  file '*' into annotated_results
+  file '*' into report
 
   script:
   """
   Rscript $PWD/scripts/06_add_anno_results.R ${params.ref_genome}
   """
 }
+}
+
+/*
+** STEP 7 Report
+*/
+
+if((params.gwas|params.longitudinal)&params.pca_grm){
+  process report {
+    publishDir "${params.outdir}/Report", mode: 'copy'
+  
+    input:
+    file '*' from report.collect()
+  
+    output:
+  
+    script:
+    """
+    mkdir -p ${params.outdir}/Report
+    Rscript -e 'rmarkdown::render("$PWD/scripts/07_report.Rmd")' ${params.outdir}/PCA_GRM/pcair/PC1vsPC2.png ${params.outdir}/PCA_GRM/pcair/PC3vsPC4.png ${params.outdir}/PCA_GRM/pcrelate/kinship.png ${params.outdir}/Summary_Plot/qq_manhattan/qqplot.png ${params.outdir}/Summary_Plot/qq_manhattan/qqplot_MAF_0.1.png ${params.outdir}/Summary_Plot/qq_manhattan/manhattan_plot.png ${params.outdir}/Summary_Plot/qq_manhattan/manhattan_plot_MAF_0.1.png ${params.outdir}/Annotation/annotated_results/top_snps_annotation.csv
+    mv $PWD/scripts/07_report.html ${params.outdir}/Report/07_report.html
+    """
+  }
+}
+
+if((params.gwas|params.longitudinal)&!params.pca_grm){
+  process report_skip_pca_grm {
+    publishDir "${params.outdir}/Report", mode: 'copy'
+  
+    input:
+    file '*' from report.collect()
+  
+    output:
+  
+    script:
+    """
+    mkdir -p ${params.outdir}/Report
+    Rscript -e 'rmarkdown::render("$PWD/scripts/07_report_skip_pca_grm.Rmd")' ${params.outdir}/Summary_Plot/qq_manhattan/qqplot.png ${params.outdir}/Summary_Plot/qq_manhattan/qqplot_MAF_0.1.png ${params.outdir}/Summary_Plot/qq_manhattan/manhattan_plot.png ${params.outdir}/Summary_Plot/qq_manhattan/manhattan_plot_MAF_0.1.png ${params.outdir}/Annotation/annotated_results/top_snps_annotation.csv
+    mv $PWD/scripts/07_report_skip_pca_grm.html ${params.outdir}/Report/07_report_skip_pca_grm.html
+    """
+  }
+}
+
+if(params.gene_based&params.pca_grm){
+  process report_gene {
+    publishDir "${params.outdir}/Report", mode: 'copy'
+  
+    input:
+    file '*' from qq_plot.collect()
+  
+    output:
+  
+    script:
+    """
+    mkdir -p ${params.outdir}/Report
+    Rscript -e 'rmarkdown::render("$PWD/scripts/07_report_gene.Rmd")' ${params.outdir}/PCA_GRM/pcair/PC1vsPC2.png ${params.outdir}/PCA_GRM/pcair/PC3vsPC4.png ${params.outdir}/PCA_GRM/pcrelate/kinship.png ${params.outdir}/Summary_Plot/qq_plot/qqplot.png ${params.outdir}/Summary_Plot/combined_results/all_chr.csv
+    mv $PWD/scripts/07_report.html ${params.outdir}/Report/07_report.html
+    """
+  }
+}
+
+if(params.gene_based&!params.pca_grm){
+  process report_gene_skip_pca_grm {
+    publishDir "${params.outdir}/Report", mode: 'copy'
+  
+    input:
+    file '*' from qq_plot.collect()
+  
+    output:
+  
+    script:
+    """
+    mkdir -p ${params.outdir}/Report
+    Rscript -e 'rmarkdown::render("$PWD/scripts/07_report_skip_pca_grm.Rmd")' ${params.outdir}/Summary_Plot/qq_manhattan/qqplot.png ${params.outdir}/Summary_Plot/qq_manhattan/qqplot_MAF_0.1.png ${params.outdir}/Summary_Plot/qq_manhattan/manhattan_plot.png ${params.outdir}/Summary_Plot/qq_manhattan/manhattan_plot_MAF_0.1.png ${params.outdir}/Annotation/annotated_results/top_snps_annotation.csv
+    mv $PWD/scripts/07_report_skip_pca_grm.html ${params.outdir}/Report/07_report_skip_pca_grm.html
+    """
+  }
 }
