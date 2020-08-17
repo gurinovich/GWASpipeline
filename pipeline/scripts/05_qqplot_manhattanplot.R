@@ -61,6 +61,12 @@ for(i in 1: (length(color.length)-1)){
 lab.chrom <- as.character(names(table(data.plot$chr)))
 x<- c(1: length(log10.pval))
 limit.bf <- min(log10.pval)
+
+if(limit.bf==Inf){
+	print("P-values not compatible")
+	quit(status=0)
+	}
+
 L.1 <- 0
 L.2 <- 0
 
