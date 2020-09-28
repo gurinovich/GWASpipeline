@@ -22,7 +22,7 @@ colnames(result.dat)[colnames(result.dat)=="PVAL"] <- "Score.pval"
 result.dat$Score.pval <- as.numeric(result.dat$Score.pval)
 result.dat$Score.SE <- sqrt(result.dat$VAR)
 
-fwrite(result.dat, out.file, quote=F, row.names=F)
+fwrite(result.dat, out.file, row.names=F)
 
 date()
 sink()
