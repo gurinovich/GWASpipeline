@@ -32,7 +32,6 @@ rownames(dat.gds) <- chr
 ```{r}
 kable(t(dat.gds))
 ```
-`r ###`
 
 The number of SNPs analyzed in the regression model:
 ```{r include=FALSE}
