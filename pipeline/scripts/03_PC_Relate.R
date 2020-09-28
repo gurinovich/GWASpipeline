@@ -1,74 +1,74 @@
 #!/usr/bin/env Rscript
 args = commandArgs(trailingOnly=TRUE)
 gds.file <- args[1]
-pheno.file <- args[2]
-phenotypes <- args[3]
-covariates <- unlist(strsplit(args[4], ","))
-snpset.file <- args[5]
-analysis.sample.id <- args[6]
-annot <- args[7]
-pruned <- args[8]
-king <- args[9]
-pcs <- args[10]
-pc_df <- args[11]
+annot <- args[2]
+nullmod <- args[3]
+max_maf <- args[4]
+method <- args[5]
+result.file1 <- args[6]
+result.file2 <- args[7]
+log.file <- args[8]
 
-sink("pc_relate.log", append=FALSE, split=TRUE)
+sink(log.file, append=FALSE, split=TRUE)
 date()
 suppressPackageStartupMessages(library(SeqArray))
 suppressPackageStartupMessages(library(GENESIS))
 suppressPackageStartupMessages(library(Biobase))
 suppressPackageStartupMessages(library(SeqVarTools))
 suppressPackageStartupMessages(library(dplyr))
-suppressPackageStartupMessages(library(SNPRelate))
-suppressPackageStartupMessages(library(ggplot2))
-suppressPackageStartupMessages(library(data.table))
+suppressPackageStartupMessages(library(GenomicRanges))
+suppressPackageStartupMessages(library(TxDb.Hsapiens.UCSC.hg19.knownGene))
 
 ####Open GDS
 gds <- seqOpen(gds.file)
 
 ####Create a SeqVarData object
-analysis.sample.id <- readRDS(analysis.sample.id)
 annot <- readRDS(annot)
 seqData <- SeqVarData(gds, sampleData=annot)
 
-####Read in pruned set
-pruned <- readRDS(pruned)
+####Null model
+nullmod <- readRDS(nullmod)
 
-####KING
-king <- readRDS(king)
-kingMat <- king$kinship
-dimnames(kingMat) <- list(king$sample.id, king$sample.id)
+####Aggregate test
+gr <- granges(gds)
 
-####PC-AiR
-pcs <- readRDS(pcs)
+####find variants that overlap with each gene
+txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+gr <- renameSeqlevels(gr, paste0("chr", seqlevels(gr)))
+ts <- transcriptsByOverlaps(txdb, gr, columns=c("GENEID"))
+genes.gr <- genes(txdb)
 
-pc.df <- readRDS(pc_df)
+o <- findOverlaps(ts, genes.gr)
 
-####PC-Relate
-seqSetFilter(seqData, variant.id=pruned)
-iterator <- SeqVarBlockIterator(seqData, variantBlock=20000, verbose=FALSE)
+if(length(o)>0){
+	gr2 <- split(genes.gr[subjectHits(o)], 1:length(o))
 
-cat("\n####pcrelate starts\n")
-pcrel <- pcrelate(iterator, pcs=pcs$vectors[,1:2], sample.include=analysis.sample.id, training.set=pcs$unrels)
-cat("####pcrelate ends\n\n")
+	####define genes
+	genes <- unique(unlist(gr2))
+	genes <- renameSeqlevels(genes, sub("chr", "", seqlevels(genes)))
 
-seqResetFilter(seqData, verbose=FALSE)
+	####create an iterator where each successive unit is a different gene
+	iterator <- SeqVarRangeIterator(seqData, variantRanges = genes, verbose=FALSE)
 
-kinship <- pcrel$kinBtwn
+	####do a burden test on the rare variants in each gene
+	cat("\n####assocTestAggregate starts\n")
+	assoc <- assocTestAggregate(iterator, nullmod, AF.max=max_maf, 
+								test="Burden",
+                                verbose=T)
+	cat("####assocTestAggregate ends\n\n")
 
-cat("\n####kinship plot starts\n")
-png("kinship.png")
-ggplot(kinship, aes(k0, kin)) +
-    geom_hline(yintercept=2^(-seq(3,9,2)/2), linetype="dashed", color="grey") +
-    geom_point(alpha=0.5) +
-    ylab("kinship estimate") +
-    theme_bw()
-dev.off()
-cat("####kinship plot ends\n\n")
+	out <- assoc$results
+	out <- cbind(as.data.frame(genes), out)
+	colnames(out)[1] <- "chr" 
 
-####covariance matrix from pcrelate output
-grm <- pcrelateToMatrix(pcrel, scaleKin=2)
-saveRDS(grm,"grm.rds")
+	write.csv(out, file = result.file1, row.names=FALSE)
+	saveRDS(assoc, result.file2)
+
+}
+
+if(length(o)==0){
+	print("No genes identified")	
+}
 
 date()
 sink()
