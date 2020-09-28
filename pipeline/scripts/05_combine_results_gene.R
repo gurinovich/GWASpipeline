@@ -22,7 +22,13 @@ for (chr in 2:22) {
   	result <- bind_rows(result, res)}
 }
 
-fwrite(result, paste0("all_chr.csv"), row.names = FALSE)
+result <- result %>%
+  rename(pval = contains("pval"))
+
+result <- result %>%
+	select ("chr", "start", "end", "width", "strand", "gene_id", "n.site", "n.alt", "n.sample.alt", contains("Score"), contains("Wald"), "pval")
+
+fwrite(result[order(result$pval),], paste0("all_chr.csv"), row.names = FALSE)
 
 date()
 sink()
