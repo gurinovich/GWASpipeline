@@ -24,6 +24,9 @@ gds <- seqOpen(gds.file)
 pheno.dat <- read.csv(pheno.file, stringsAsFactors=F, header=T)
 pheno.dat$sample.id <- as.character(pheno.dat[,1])
 print(paste0("number of individuals in pheno data : ",length(pheno.dat$sample.id)))
+if(length(pheno.dat$sample.id)>length(unique(pheno.dat$sample.id))){
+    pheno.dat <- pheno.dat[!duplicated(pheno.dat$sample.id),]
+}
 
 for(i in 1:32){
 if(sum(colnames(pheno.dat)==paste0("PC",i))==1){
@@ -57,7 +60,7 @@ if(snpset.file=="null"){
   pruned <- unlist(snpset, use.names=FALSE)
   saveRDS(pruned, "pruned.rds")
   pruned.dat <- snp.dat[snp.dat$variant.id%in%pruned,]
-  fwrite(pruned.dat[,c("chr", "pos")], "./data/snpset.txt", quote=FALSE, row.names=FALSE, )
+  fwrite(pruned.dat[,c("chr", "pos")], "snpset.txt", quote=FALSE, row.names=FALSE, sep=',')
 }else{
   snpset.dat <- fread(snpset.file,stringsAsFactors=F,header=T,na.strings=c(NA,""))
   snpset.dat$chr_pos <- paste0(snpset.dat$chr, ":", snpset.dat$pos)
@@ -77,8 +80,8 @@ cat("####snpgdsIBDKING ends\n\n")
 
 ####PC-AiR
 cat("\n####pcair starts\n")
-pcs <- pcair(seqData, kinobj=kingMat, kin.thresh=2^(-9/2),
-                      divobj=kingMat, div.thresh=-2^(-9/2),
+pcs <- pcair(seqData, kinobj=kingMat, kin.thresh=2^(-7/2),
+                      divobj=kingMat, div.thresh=-2^(-7/2),
              sample.include=analysis.sample.id,
              snp.include=pruned,
              verbose=T)
