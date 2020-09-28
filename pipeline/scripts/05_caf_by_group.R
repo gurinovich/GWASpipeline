@@ -34,21 +34,25 @@ if(sum(colnames(pheno.dat)%in%c(group))==1){
 		genotype.dat <- seqGetData(gds, "genotype")
 		genotype <- genotype.dat[1,,]+genotype.dat[2,,]
 		caf <- apply(genotype,2,sum)/dim(genotype)[1]/2
-		dosage.dat <- seqGetData(gds, "annotation/format/DS")$data
-		dosage <- apply(dosage.dat,2,sum)/dim(dosage.dat)[1]/2
+		try(dosage.dat <- seqGetData(gds, "annotation/format/DS")$data)
+		try(dosage <- apply(dosage.dat,2,sum)/dim(dosage.dat)[1]/2)
 		seqResetFilter(gds)
 		out.caf <- cbind(out.caf, caf)
-		out.dosage <- cbind(out.dosage, dosage)
+		try(out.dosage <- cbind(out.dosage, dosage))
 	}
 	out.caf <- as.data.frame(out.caf)
-	out.dosage <- as.data.frame(out.dosage)
+	try(out.dosage <- as.data.frame(out.dosage))
 	colnames(out.caf) <- paste0(group_names, ".caf")
-	colnames(out.dosage) <- paste0(group_names, ".dosage")
-	out.caf.dosage <- cbind(out.caf, out.dosage)
+	try(colnames(out.dosage) <- paste0(group_names, ".dosage"))
+	if(dim(out.dosage)[1]==0){
+	    out.caf.dosage <- out.caf
+	}else{
+	    out.caf.dosage <- cbind(out.caf, out.dosage)
+	}
 	out.caf.dosage$chr <- seqGetData(gds,"chromosome")
 	out.caf.dosage$pos <- seqGetData(gds,"position")
 }else{
-	group_names <- c()
+	out.caf.dosage <- data.frame(chr=seqGetData(gds,"chromosome"), pos=seqGetData(gds,"position"))
 	print("group variable not found")
 	}
 
@@ -58,8 +62,8 @@ if (model == "logistic") {
 	genotype.dat <- seqGetData(gds,"genotype")
 	genotype <- genotype.dat[1,,]+genotype.dat[2,,]
 	case.caf <- apply(genotype,2,sum)/dim(genotype)[1]/2
-	dosage.dat <- seqGetData(gds, "annotation/format/DS")$data
-	case.dosage <- apply(dosage.dat,2,sum)/dim(dosage.dat)[1]/2
+	try(dosage.dat <- seqGetData(gds, "annotation/format/DS")$data)
+	try(case.dosage <- apply(dosage.dat,2,sum)/dim(dosage.dat)[1]/2)
 	seqResetFilter(gds)
 	
 	control.id <- pheno.dat[pheno.dat[,phenotypes]==0,]$sample.id
@@ -67,16 +71,16 @@ if (model == "logistic") {
 	genotype.dat <- seqGetData(gds,"genotype")
 	genotype <- genotype.dat[1,,]+genotype.dat[2,,]
 	control.caf <- apply(genotype,2,sum)/dim(genotype)[1]/2
-	dosage.dat <- seqGetData(gds, "annotation/format/DS")$data
-	control.dosage <- apply(dosage.dat,2,sum)/dim(dosage.dat)[1]/2
+	try(dosage.dat <- seqGetData(gds, "annotation/format/DS")$data)
+	try(control.dosage <- apply(dosage.dat,2,sum)/dim(dosage.dat)[1]/2)
 	seqResetFilter(gds)
 
 	out.caf.dosage$n.case <- length(case.id)
 	out.caf.dosage$n.control <- length(control.id)
 	out.caf.dosage$case.caf <- case.caf
 	out.caf.dosage$control.caf <- control.caf
-	out.caf.dosage$case.dosage <- case.dosage
-	out.caf.dosage$control.dosage <- control.dosage
+	try(out.caf.dosage$case.dosage <- case.dosage)
+	try(out.caf.dosage$control.dosage <- control.dosage)
 }
 
 
@@ -84,19 +88,23 @@ seqSetFilter(gds, sample.id = analysis.sample.id)
 genotype.dat <- seqGetData(gds, "genotype")
 genotype <- genotype.dat[1,,]+genotype.dat[2,,]
 caf <- apply(genotype,2,sum)/dim(genotype)[1]/2
-dosage.dat <- seqGetData(gds, "annotation/format/DS")$data
-dosage <- apply(dosage.dat,2,sum)/dim(dosage.dat)[1]/2
+try(dosage.dat <- seqGetData(gds, "annotation/format/DS")$data)
+try(dosage <- apply(dosage.dat,2,sum)/dim(dosage.dat)[1]/2)
 seqResetFilter(gds)
 
 out.caf.dosage$caf <- caf
-out.caf.dosage$dosage <- dosage
+try(out.caf.dosage$dosage <- dosage)
 
 allele <- seqGetData(gds, "allele")
 all.dat <- colsplit(allele, ",", c("REF", "ALT"))
 
-out <- cbind(out.caf.dosage, all.dat)
+try(Imputation_Rsq <- seqGetData(gds, "annotation/info/R2"))
+try(Imputation_mark <- seqGetData(gds, "annotation/filter"))
 
-write.csv(out, file = out.file, quote=FALSE, row.names=FALSE)
+out <- cbind(out.caf.dosage, all.dat)
+try(out <- cbind(out, Imputation_Rsq, Imputation_mark))
+
+write.csv(out, file = out.file, row.names=FALSE)
 
 date()
 sink()
