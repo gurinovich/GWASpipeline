@@ -17,7 +17,7 @@ for (chr in 2:15) {
   result <- bind_rows(result, res)
 }
 
-fwrite(result, paste0("all_chr_caf_annotated.csv"), row.names = FALSE, quote=F)
+fwrite(result, paste0("all_chr_caf_annotated.csv"), row.names = FALSE)
 
 date()
 sink()
