@@ -29,7 +29,7 @@ if (model == "logistic") {
 
 }
 
-fwrite(out.dat, combine.file, quote=F, row.names=F)
+fwrite(out.dat, combine.file, row.names=F)
 
 date()
 sink()
