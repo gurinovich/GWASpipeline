@@ -27,6 +27,10 @@ gds <- seqOpen(gds.file)
 pheno.dat <- read.csv(pheno.file, stringsAsFactors=F, header=T)
 pheno.dat$sample.id <- as.character(pheno.dat[,1])
 print(paste0("number of individuals in pheno data : ",length(pheno.dat$sample.id)))
+if(length(pheno.dat$sample.id)>length(unique(pheno.dat$sample.id))){
+    pheno.dat1 <- pheno.dat
+    pheno.dat <- pheno.dat[!duplicated(pheno.dat$sample.id),]
+}
 
 gds.sample.id <- data.frame(sample.id=seqGetData(gds, "sample.id"),stringsAsFactors=F)
 print(paste0("number of individuals in geno data : ", dim(gds.sample.id)[1]))
@@ -48,6 +52,14 @@ saveRDS(annot, "annot.rds")
 all.equal(annot$sample.id,seqGetData(gds, "sample.id"))
 seqData <- SeqVarData(gds, sampleData=annot)
 
+model.dat <- model.dat[, colnames(model.dat)%in%c("sample.id", paste0("PC",1:32))]
+if(is.null(dim(model.dat))){
+    pheno.pc.dat <- pheno.dat1[pheno.dat1$sample.id%in%analysis.sample.id,]
+}else{
+    pheno.dat1 <- pheno.dat1[pheno.dat1$sample.id%in%analysis.sample.id,]
+    pheno.pc.dat <- left_join(pheno.dat1, model.dat, by="sample.id")
+}
+
 ####Mixed effect null model
 if(model=="linear"){
 	model.switch <- gaussian(link = "identity")
@@ -66,12 +78,12 @@ fix.eff=formula(fix.eff)
 if(grm=="null"){
 	if(slope=="null"){
 		cat("\n####glmmkin starts\n")
-		nullmod <- glmmkin(fix.eff, data=model.dat, kins=NULL, 
+		nullmod <- glmmkin(fix.eff, data=pheno.pc.dat, kins=NULL, 
 	        		   id="sample.id", family = model.switch)
 		cat("####glmmkin ends\n\n")
 	}else{
 		cat("\n####glmmkin starts\n")
-		nullmod <- glmmkin(fix.eff, data=model.dat, kins=NULL, 
+		nullmod <- glmmkin(fix.eff, data=pheno.pc.dat, kins=NULL, 
 		           random.slope=slope, id="sample.id", family = model.switch)
 		cat("####glmmkin ends\n\n")
 	}	
@@ -79,12 +91,12 @@ if(grm=="null"){
 	grm <- readRDS(grm)
 		if(slope=="null"){
 		cat("\n####glmmkin starts\n")
-		nullmod <- glmmkin(fix.eff, data=model.dat, kins=as.matrix(grm), 
+		nullmod <- glmmkin(fix.eff, data=pheno.pc.dat, kins=as.matrix(grm), 
 	        		   id="sample.id", family = model.switch)
 		cat("####glmmkin ends\n\n")
 	}else{
 		cat("\n####glmmkin starts\n")
-		nullmod <- glmmkin(fix.eff, data=model.dat, kins=as.matrix(grm), 
+		nullmod <- glmmkin(fix.eff, data=pheno.pc.dat, kins=as.matrix(grm), 
 		           random.slope=slope, id="sample.id", family = model.switch)
 		cat("####glmmkin ends\n\n")
 	}
