@@ -61,7 +61,7 @@ if(length(o)>0){
 	out <- cbind(as.data.frame(genes), out)
 	colnames(out)[1] <- "chr" 
 
-	write.csv(out, file = result.file1, quote=FALSE, row.names=FALSE)
+	write.csv(out, file = result.file1, row.names=FALSE)
 	saveRDS(assoc, result.file2)
 
 }
