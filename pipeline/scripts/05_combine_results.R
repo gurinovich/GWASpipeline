@@ -8,7 +8,7 @@ suppressPackageStartupMessages(library(dplyr))
 suppressPackageStartupMessages(library(data.table))
 
 chr <- 1
-res <- fread(paste0(path1, "chr_", chr, "_caf_annotated.csv"), stringsAsFactors=F, header=T))
+res <- fread(paste0(path1, "chr_", chr, "_caf_annotated.csv"), stringsAsFactors=F, header=T)
 result <- res
 
 #chr <- 2
