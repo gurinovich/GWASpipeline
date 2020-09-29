@@ -9,7 +9,7 @@ suppressPackageStartupMessages(library(data.table))
 
 chr <- 1
 if("chr_1.csv"%in%dir(path1)){
-	res <- fread(paste0(path1, "chr_", chr, ".csv"))
+	res <- fread(paste0(path1, "chr_", chr, ".csv"), stringsAsFactors=F, header=T)
     result <- res
 }else{
 	result <- matrix()
@@ -18,7 +18,7 @@ if("chr_1.csv"%in%dir(path1)){
 #chr <- 2
 for (chr in 2:22) {
   if(paste0("chr_", chr, ".csv")%in%dir(path1)){
-  	res <- fread(paste0(path1, "chr_", chr, ".csv"))
+  	res <- fread(paste0(path1, "chr_", chr, ".csv"), stringsAsFactors=F, header=T)
   	result <- bind_rows(result, res)}
 }
 
