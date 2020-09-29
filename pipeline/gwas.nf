@@ -26,7 +26,6 @@ params.max_maf     = 0.01
 params.method      = "Burden"
 
 params.longitudinal = false
-params.model_l      = null
 params.random_slope = null
 
 params.group               = "null"
@@ -74,7 +73,7 @@ Optional arguments:
 --covars                   String       Name of the covariates to include in analysis model separated by comma
 --ref_genome               String       Name of the reference genome: hg19 or hg38
 --gwas                     Logical      If true, run gwas
---model                    String       Name of regression model for gwas: Linear or Logistic
+--model                    String       Name of regression model for gwas: linear or logistic
 --test                     String       Name of statistical test for significance: Wald or Score
 
 --outdir
@@ -376,7 +375,7 @@ if(params.longitudinal&params.pca_grm){
 
     script:
     """
-    Rscript $PWD/scripts/04_nullmod_longitudinal.R ${params.phenotypes} ${params.covars} ${params.model} analysis.sample.id.rds pc.df.rds grm.rds ${params.random_slope}
+    Rscript $PWD/scripts/04_nullmod_longitudinal.R ${params.pheno} ${params.phenotypes} ${params.covars} ${params.model} analysis.sample.id.rds pc.df.rds grm.rds ${params.random_slope}
     """
   }
 }
@@ -544,7 +543,7 @@ if(params.longitudinal){
 
     script:
     """
-    Rscript $PWD/scripts/05_merge_by_chr.R chr_${x}.csv chr_${x}_caf_by_group.csv ${params.model_l} chr_${x}_caf_annotated.csv chr${x}_merge.log
+    Rscript $PWD/scripts/05_merge_by_chr.R chr_${x}.csv chr_${x}_caf_by_group.csv ${params.model} chr_${x}_caf_annotated.csv chr${x}_merge.log
     """
   }
 }
@@ -647,7 +646,7 @@ process add_annovar {
 ** STEP 7 Report
 */
 
-if((params.gwas|params.longitudinal)&params.pca_grm){
+if(params.gwas|params.longitudinal){
   process report {
     publishDir "${params.outdir}/Report", mode: 'copy'
   
@@ -659,31 +658,13 @@ if((params.gwas|params.longitudinal)&params.pca_grm){
     script:
     """
     mkdir -p ${params.outdir}/Report
-    Rscript -e 'rmarkdown::render("$PWD/scripts/07_report.Rmd")' ${params.outdir}/PCA_GRM/pcair/PC1vsPC2.png ${params.outdir}/PCA_GRM/pcair/PC3vsPC4.png ${params.outdir}/PCA_GRM/pcrelate/kinship.png ${params.outdir}/Summary_Plot/qq_manhattan/qqplot.png ${params.outdir}/Summary_Plot/qq_manhattan/qqplot_MAF_0.1.png ${params.outdir}/Summary_Plot/qq_manhattan/manhattan_plot.png ${params.outdir}/Summary_Plot/qq_manhattan/manhattan_plot_MAF_0.1.png ${params.outdir}/Annotation/annotated_results/top_snps_annotation.csv
-    mv $PWD/scripts/07_report.html ${params.outdir}/Report/07_report.html
+    Rscript -e 'rmarkdown::render("$PWD/scripts/07_report.Rmd")' ${params.outdir}
+    mv $PWD/scripts/07_report.html ${params.outdir}/Report/Report.html
     """
   }
 }
 
-if((params.gwas|params.longitudinal)&!params.pca_grm){
-  process report_skip_pca_grm {
-    publishDir "${params.outdir}/Report", mode: 'copy'
-  
-    input:
-    file '*' from report.collect()
-  
-    output:
-  
-    script:
-    """
-    mkdir -p ${params.outdir}/Report
-    Rscript -e 'rmarkdown::render("$PWD/scripts/07_report_skip_pca_grm.Rmd")' ${params.outdir}/Summary_Plot/qq_manhattan/qqplot.png ${params.outdir}/Summary_Plot/qq_manhattan/qqplot_MAF_0.1.png ${params.outdir}/Summary_Plot/qq_manhattan/manhattan_plot.png ${params.outdir}/Summary_Plot/qq_manhattan/manhattan_plot_MAF_0.1.png ${params.outdir}/Annotation/annotated_results/top_snps_annotation.csv
-    mv $PWD/scripts/07_report_skip_pca_grm.html ${params.outdir}/Report/07_report_skip_pca_grm.html
-    """
-  }
-}
-
-if(params.gene_based&params.pca_grm){
+if(params.gene_based){
   process report_gene {
     publishDir "${params.outdir}/Report", mode: 'copy'
   
@@ -695,26 +676,8 @@ if(params.gene_based&params.pca_grm){
     script:
     """
     mkdir -p ${params.outdir}/Report
-    Rscript -e 'rmarkdown::render("$PWD/scripts/07_report_gene.Rmd")' ${params.outdir}/PCA_GRM/pcair/PC1vsPC2.png ${params.outdir}/PCA_GRM/pcair/PC3vsPC4.png ${params.outdir}/PCA_GRM/pcrelate/kinship.png ${params.outdir}/Summary_Plot/qq_plot/qqplot.png ${params.outdir}/Summary_Plot/combined_results/all_chr.csv
-    mv $PWD/scripts/07_report.html ${params.outdir}/Report/07_report.html
-    """
-  }
-}
-
-if(params.gene_based&!params.pca_grm){
-  process report_gene_skip_pca_grm {
-    publishDir "${params.outdir}/Report", mode: 'copy'
-  
-    input:
-    file '*' from qq_plot.collect()
-  
-    output:
-  
-    script:
-    """
-    mkdir -p ${params.outdir}/Report
-    Rscript -e 'rmarkdown::render("$PWD/scripts/07_report_skip_pca_grm.Rmd")' ${params.outdir}/Summary_Plot/qq_manhattan/qqplot.png ${params.outdir}/Summary_Plot/qq_manhattan/qqplot_MAF_0.1.png ${params.outdir}/Summary_Plot/qq_manhattan/manhattan_plot.png ${params.outdir}/Summary_Plot/qq_manhattan/manhattan_plot_MAF_0.1.png ${params.outdir}/Annotation/annotated_results/top_snps_annotation.csv
-    mv $PWD/scripts/07_report_skip_pca_grm.html ${params.outdir}/Report/07_report_skip_pca_grm.html
+    Rscript -e 'rmarkdown::render("$PWD/scripts/07_report_gene.Rmd")' ${params.outdir} ${params.max_pval}
+    mv $PWD/scripts/07_report_gene.html ${params.outdir}/Report/07_report_gene.html
     """
   }
 }
