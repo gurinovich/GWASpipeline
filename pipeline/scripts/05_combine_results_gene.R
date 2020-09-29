@@ -19,7 +19,7 @@ if("chr_1.csv"%in%dir(path1)){
 for (chr in 2:22) {
   if(paste0("chr_", chr, ".csv")%in%dir(path1)){
   	res <- fread(paste0(path1, "chr_", chr, ".csv"), stringsAsFactors=F, header=T)
-  	result <- bind_rows(result, res)}
+  	result <- rbind(result, res)}
 }
 
 result <- result %>%
