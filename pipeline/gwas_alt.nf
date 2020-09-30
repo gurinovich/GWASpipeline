@@ -161,3 +161,116 @@ process qc_mono {
   bcftools view -e 'COUNT(GT="AA")=N_SAMPLES || COUNT(GT="RR")=N_SAMPLES || COUNT(GT="AR")=N_SAMPLES || COUNT(GT="RA")=N_SAMPLES' $vcf -Oz -o ${chr}_qc2.vcf.gz
   """
 }
+
+/*
+** STEP 2 vcf_to_gds
+*/
+process vcf_to_gds {
+  tag "$chr"
+  publishDir "${params.outdir}/GDS/gds_files", mode: 'copy'
+    
+  input:
+  set val(chr), file(vcf) from qc2_1
+
+  output:
+  file "*"
+  file('*.gds') into gds_files_1
+  set val(chr), file('*.gds') into gds_files_2
+
+  script:
+  """
+  02_vcf_to_gds.R $vcf ${chr}.gds ${chr}_vcf_to_gds.log
+  """
+}
+
+process merge_gds {
+  publishDir "${params.outdir}/GDS/gds_merged", mode: 'copy'
+
+  input:
+  file(gds_files) from gds_files_1.collect()
+
+  output:
+  file '*'
+  file 'merged.gds' into gds_merged_1, gds_merged_2, gds_merged_3
+
+  script:
+  """
+  02_merge_gds.R $gds_files
+  """
+}
+
+/*
+** STEP 3 PCA and GRM
+*/
+if (params.pca_grm) {
+  process pcair {
+    publishDir "${params.outdir}/PCA_GRM/pcair", mode: 'copy'
+        
+    input:
+    file(gds_merged) from gds_merged_1
+
+    output:
+    file '*' into pcair1, pcair2, pcair3
+
+    script:
+    """
+    03_PC_AiR.R $gds_merged ${params.pheno} ${params.phenotypes} ${params.covars} ${params.snpset}
+    """
+  }
+
+  process pcrelate {
+    publishDir "${params.outdir}/PCA_GRM/pcrelate", mode: 'copy'
+    
+    input:
+    file(gds_merged) from gds_merged_2
+    file '*' from pcair1.collect()
+
+    output:
+    file '*' into pcrelate
+
+    script:
+    """
+    03_PC_Relate.R $gds_merged ${params.pheno} ${params.phenotypes} ${params.covars} ${params.snpset} analysis.sample.id.rds annot.rds pruned.rds king.rds pcs.rds pc.df.rds
+    """
+  }
+}
+
+/*
+** STEP 4 nullmod and gwas/gene-based/longitudinal analysis
+*/
+if ( (params.gwas | params.gene_based) & params.pca_grm) {
+  process nullmod {
+    publishDir "${params.outdir}/Association_Test/nullmod", mode: 'copy'
+  
+    input:
+    file(gds_merged) from gds_merged_3
+    file '*' from pcair2.collect()
+    file '*' from pcrelate.collect()
+
+    output:
+    file '*' into nullmod
+
+    script:
+    """
+    04_nullmod.R $gds_merged ${params.phenotypes} ${params.covars} ${params.model} analysis.sample.id.rds annot.rds pc.df.rds grm.rds
+    """
+  }
+}
+
+if ( (params.gwas | params.gene_based) & !params.pca_grm) {
+  process nullmod_skip_pca_grm {
+    publishDir "${params.outdir}/Association_Test/nullmod", mode: 'copy'
+  
+    input:
+    file(gds_merged) from gds_merged_3
+
+    output:
+    file '*' into nullmod, nullmod1
+
+    script:
+    """
+    04_nullmod_skip_pca_grm.R $gds_merged ${params.pheno} ${params.phenotypes} ${params.covars} ${params.model} ${params.grm}
+    """
+  }
+}
+
