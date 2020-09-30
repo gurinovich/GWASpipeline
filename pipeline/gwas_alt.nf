@@ -142,7 +142,7 @@ process qc_miss {
 
   script:
   """
-  vcftools --gzvcf $vcf --max-missing 0.99 --recode --stdout | gzip -c > qc1.vcf.gz
+  vcftools --gzvcf $vcf --max-missing 0.99 --recode --stdout | gzip -c > ${chr}_qc1.vcf.gz
   """
 }
 
@@ -158,7 +158,6 @@ process qc_mono {
 
   script:
   """
-  bcftools view -e 'COUNT(GT="AA")=N_SAMPLES || COUNT(GT="RR")=N_SAMPLES || COUNT(GT="AR")=N_SAMPLES || COUNT(GT="RA")=N_SAMPLES' $vcf -Oz -o qc2.vcf.gz
+  bcftools view -e 'COUNT(GT="AA")=N_SAMPLES || COUNT(GT="RR")=N_SAMPLES || COUNT(GT="AR")=N_SAMPLES || COUNT(GT="RA")=N_SAMPLES' $vcf -Oz -o ${chr}_qc2.vcf.gz
   """
 }
-
