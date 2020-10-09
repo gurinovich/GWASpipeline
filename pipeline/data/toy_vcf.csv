@@ -1,4 +1,4 @@
-id,file_path
+Chromosome,VCF
 chr_1,/data/vcf/vcf_file1.vcf.gz
 chr_2,/data/vcf/vcf_file2.vcf.gz
 chr_3,/data/vcf/vcf_file3.vcf.gz
