@@ -335,8 +335,8 @@ if (params.gene_based & params.pca_grm) {
     file '*' from nullmod.collect()
  
     output:
-    set val(chr), file('*.csv') into gene_based_1
-    file '*' into gene_based_2
+    set val(chr), file('*.csv') into gene_based
+    file '*'
   
     script:
     """
@@ -355,8 +355,8 @@ if (params.gene_based & !params.pca_grm) {
     file '*' from nullmod.collect()
  
     output:
-    set val(chr), file('*.csv') into gene_based_1
-    file '*' into gene_based_2
+    set val(chr), file('*.csv') into gene_based
+    file '*'
 
     script:
     """
@@ -429,14 +429,14 @@ if (params.gene_based) {
     publishDir "${params.outdir}/Summary_Plot/combined_results", mode: 'copy'
   
     input:
-    file '*' from gene_based.collect()
+    file(gene) from gene_based.collect()
   
     output:
     file '*' into combined_results
 
     script:
     """
-    05_combine_results_gene.R ${params.outdir}/Association_Test/gene_based/
+    05_combine_results_gene.R ${gene}
     """
   }
 
