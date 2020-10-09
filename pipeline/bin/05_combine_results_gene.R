@@ -7,19 +7,10 @@ date()
 suppressPackageStartupMessages(library(dplyr))
 suppressPackageStartupMessages(library(data.table))
 
-chr <- 1
-if("chr_1.csv"%in%dir(path1)){
-	res <- fread(paste0(path1, "chr_", chr, ".csv"), stringsAsFactors=F, header=T)
-    result <- res
-}else{
-	result <- matrix()
-}
-
-#chr <- 2
-for (chr in 2:22) {
-  if(paste0("chr_", chr, ".csv")%in%dir(path1)){
-  	res <- fread(paste0(path1, "chr_", chr, ".csv"), stringsAsFactors=F, header=T)
-  	result <- rbind(result, res)}
+result <- fread(args[1], stringsAsFactors=F, header=T)
+for (i in 2:length(args)) {
+  res <- fread(args[i], stringsAsFactors=F, header=T)
+  result <- rbind(result, res)
 }
 
 result <- result %>%
